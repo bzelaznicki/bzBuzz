@@ -40,9 +40,13 @@ public class BoardController {
 
     @GetMapping("/b/{name}")
     public String boardPage(@AuthenticationPrincipal UserDetails userDetails, @PathVariable String name, Model model) {
-        model.addAttribute("currentUser", getCurrentUser(userDetails));
         Board board = boardService.findByName(name);
         model.addAttribute("board", board);
+        User user = getCurrentUser(userDetails);
+        model.addAttribute("currentUser", user);
+        model.addAttribute("isMember", user != null && boardService.isMember(board, user));
+
+
         return "board/home";
     }
 

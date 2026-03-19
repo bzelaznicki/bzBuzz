@@ -34,7 +34,7 @@ public class Board {
     @Column(name = "member_count", nullable = false)
     private int memberCount = 1;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "created_by")
     private User createdBy;
 

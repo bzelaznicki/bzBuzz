@@ -52,6 +52,10 @@ public class BoardService {
         return boardMemberRepository.findByUser(user);
     }
 
+    public boolean isMember(Board board, User user) {
+        return boardMemberRepository.existsByBoardAndUser(board, user);
+    }
+    
     @Transactional
     public BoardMember joinBoard(Board board, User user) {
         if (boardMemberRepository.existsByBoardAndUser(board, user)) {
