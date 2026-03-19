@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="'b/' + ${board.name}">Board</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <div class="board-header">
+        <div class="board-header-info">
+            <h1 class="board-title" th:text="'b/' + ${board.name}"></h1>
+            <p class="board-description"
+               th:text="${board.description} ?: 'No description'"
+               th:classappend="${board.description == null} ? 'muted' : ''">
+            </p>
+            <div class="board-meta">
+                <span th:text="${board.memberCount} + ' members'"></span>
+                <span class="meta-divider">·</span>
+                <span th:text="${board.createdBy != null ? 'Created by ' + board.createdBy.username : 'Created by [deleted user]'}"></span>
+                <span class="meta-divider">·</span>
+                <span th:text="'Since ' + ${#temporals.format(board.createdAt, 'MMM d, yyyy')}"></span>
+                <span th:if="${board.private}" class="badge badge-private">Private</span>
+            </div>
+        </div>
+
+        <div class="board-header-actions" sec:authorize="isAuthenticated()">
+            <form th:if="${!isMember}" th:action="@{/b/{name}/join(name=${board.name})}" method="post">
+                <button type="submit" class="btn btn-primary btn-sm">Join</button>
+            </form>
+            <form th:if="${isMember}" th:action="@{/b/{name}/leave(name=${board.name})}" method="post">
+                <button type="submit" class="btn btn-ghost btn-sm">Leave</button>
+            </form>
+        </div>
+    </div>
+
+    <div th:if="${successMessage}" class="alert alert-success">
+        <p th:text="${successMessage}"></p>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-error">
+        <p th:text="${errorMessage}"></p>
+    </div>
+
+    <div class="board-content">
+        <div class="posts">
+            <div class="empty-state">
+                <p>No posts yet.</p>
+                <a sec:authorize="isAuthenticated()"
+                   th:href="@{/b/{name}/submit(name=${board.name})}"
+                   class="btn btn-primary btn-sm">
+                    Create the first post
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

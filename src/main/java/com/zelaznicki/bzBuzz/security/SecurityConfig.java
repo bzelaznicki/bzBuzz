@@ -4,6 +4,7 @@ import com.zelaznicki.bzBuzz.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -58,7 +59,10 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(
                         auth -> auth
-                                .requestMatchers("/register", "/login",  "/css/**", "/js/**", "/images/**").permitAll()
+                                .requestMatchers("/","/register", "/login",  "/css/**", "/js/**", "/images/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/b/create").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/b/**").permitAll()
+                                .requestMatchers(HttpMethod.POST,"/b/**").authenticated()
                                 .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

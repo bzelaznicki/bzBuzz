@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head>
+  <title>Create Board</title>
+</head>
+<body>
+<div layout:fragment="content">
+  <div class="auth-card">
+    <h2>Create a Board</h2>
+
+    <div th:if="${errorMessage}" class="alert alert-error">
+      <p th:text="${errorMessage}"></p>
+    </div>
+
+    <form th:action="@{/b/create}" method="post">
+      <div class="form-group">
+        <label for="name">Board Name</label>
+        <input type="text" id="name" name="name" placeholder="e.g. java" maxlength="100" required/>
+      </div>
+      <div class="form-group">
+        <label for="description">Description</label>
+        <input type="text" id="description" name="description" placeholder="What is this board about?"/>
+      </div>
+      <div class="form-group">
+        <label for="bannerUrl">Banner URL</label>
+        <input type="text" id="bannerUrl" name="bannerUrl" placeholder="https://..." maxlength="255"/>
+      </div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" name="isPrivate" value="true"/>
+          Private board
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Create Board</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>
