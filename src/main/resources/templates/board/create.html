@@ -18,7 +18,7 @@
     <form th:action="@{/b/create}" method="post">
       <div class="form-group">
         <label for="name">Board Name</label>
-        <input type="text" id="name" name="name" placeholder="e.g. java" required/>
+        <input type="text" id="name" name="name" placeholder="e.g. java" maxlength="100" required/>
       </div>
       <div class="form-group">
         <label for="description">Description</label>
@@ -26,7 +26,7 @@
       </div>
       <div class="form-group">
         <label for="bannerUrl">Banner URL</label>
-        <input type="text" id="bannerUrl" name="bannerUrl" placeholder="https://..."/>
+        <input type="text" id="bannerUrl" name="bannerUrl" placeholder="https://..." maxlength="255"/>
       </div>
       <div class="form-group">
         <label>
