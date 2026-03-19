@@ -9,6 +9,8 @@ spring:
     show-sql: false
   flyway:
     enabled: true
+    location: classpath:db/migration
+    baseline-on-migrate: true
 
 server:
   port: 8080
