@@ -1,6 +1,5 @@
 package com.zelaznicki.bzBuzz.post;
 
-import com.zelaznicki.bzBuzz.board.Board;
 import com.zelaznicki.bzBuzz.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
