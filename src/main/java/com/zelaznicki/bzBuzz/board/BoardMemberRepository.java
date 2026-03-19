@@ -24,6 +24,4 @@ public interface BoardMemberRepository extends JpaRepository<BoardMember, UUID> 
     @Transactional
     void deleteByBoardAndUser(Board board, User user);
 
-    @Modifying
-    BoardMember updateByBoardAndUser(Board board, User user);
 }

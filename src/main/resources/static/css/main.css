@@ -204,3 +204,101 @@ body {
     border-top: 1px solid #edeff1;
     margin-top: 2rem;
 }
+
+/* Page header */
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.page-title {
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+/* Board list */
+.board-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.board-card {
+    background: #fff;
+    border: 1px solid #edeff1;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: border-color 0.15s;
+}
+
+.board-card:hover {
+    border-color: #0079d3;
+}
+
+.board-card-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #0079d3;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.board-card-title:hover {
+    text-decoration: underline;
+}
+
+.board-card-description {
+    font-size: 0.875rem;
+    color: #576069;
+}
+
+.board-card-description.muted {
+    font-style: italic;
+    color: #878a8c;
+}
+
+.board-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    margin-left: 1rem;
+}
+
+.board-card-members {
+    font-size: 0.8125rem;
+    color: #878a8c;
+    white-space: nowrap;
+}
+
+/* Badges */
+.badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.2rem 0.5rem;
+    border-radius: 9999px;
+}
+
+.badge-private {
+    background: #f6f7f8;
+    color: #576069;
+    border: 1px solid #edeff1;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #576069;
+}
+
+.empty-state p {
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}

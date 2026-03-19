@@ -24,6 +24,7 @@ public class BoardService {
                 .description(description)
                 .bannerUrl(bannerUrl)
                 .createdBy(user)
+                .memberCount(1)
                 .isPrivate(isPrivate).build();
 
         BoardMember boardMember = BoardMember.builder()

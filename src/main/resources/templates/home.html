@@ -1,10 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Home</title>
 </head>
 <body>
-<p> This is the homepage</p>
+<div layout:fragment="content">
+
+    <div class="page-header">
+        <h1 class="page-title">Popular Boards</h1>
+        <a sec:authorize="isAuthenticated()" th:href="@{/b/create}" class="btn btn-primary btn-sm">
+            New board
+        </a>
+    </div>
+
+    <div th:if="${boards.empty}" class="empty-state">
+        <p>No boards yet.</p>
+        <a th:href="@{/b/create}" class="btn btn-primary btn-sm">Create the first one!</a>
+    </div>
+
+    <div class="board-list" th:unless="${boards.empty}">
+        <div th:each="board : ${boards}" class="board-card">
+            <div class="board-card-body">
+                <a th:href="@{/b/{name}(name=${board.name})}"
+                   th:text="'b/' + ${board.name}"
+                   class="board-card-title">
+                </a>
+                <p class="board-card-description"
+                   th:text="${board.description} ?: 'No description'"
+                   th:classappend="${board.description == null} ? 'muted' : ''">
+                </p>
+            </div>
+            <div class="board-card-meta">
+                <span class="board-card-members" th:text="${board.memberCount} + ' members'"></span>
+                <span th:if="${board.private}" class="badge badge-private">Private</span>
+            </div>
+        </div>
+    </div>
+
+</div>
 </body>
 </html>
