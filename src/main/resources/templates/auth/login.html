@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — bzBuzz</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+<div class="auth-container">
+    <div class="auth-card">
+        <h1 class="auth-logo">bzBuzz</h1>
+        <h2>Sign in</h2>
+
+        <div th:if="${errorMessage}" class="alert alert-error">
+            <p th:text="${errorMessage}"></p>
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success">
+            <p th:text="${successMessage}"></p>
+        </div>
+
+        <form th:action="@{/login}" method="post">
+            <div class="form-group">
+                <label for="username">Email</label>
+                <input type="email"
+                       id="username"
+                       name="username"
+                       placeholder="you@example.com"
+                       required
+                       autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password"
+                       id="password"
+                       name="password"
+                       placeholder="••••••••"
+                       required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full">
+                Sign in
+            </button>
+        </form>
+
+        <p class="auth-footer">
+            Don't have an account?
+            <a th:href="@{/register}">Register</a>
+        </p>
+    </div>
+</div>
+</body>
+</html>
