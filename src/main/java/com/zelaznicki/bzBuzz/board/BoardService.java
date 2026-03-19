@@ -13,6 +13,10 @@ public class BoardService {
     private final BoardRepository boardRepository;
     private final BoardMemberRepository boardMemberRepository;
 
+    private boolean validateBoardName(String name) {
+        return !name.isBlank() && name.matches("[a-z0-9_-]{1,100}");
+    }
+
     @Transactional
     public Board create(String name, String description, String bannerUrl, User user, boolean isPrivate) {
         //Rules for the board name:
@@ -22,10 +26,10 @@ public class BoardService {
 
         String normalizedName = name == null ? "" : name.trim().toLowerCase();
 
-        if (normalizedName.isBlank() || !normalizedName.matches("[a-z0-9_-]{1,100}")) {
-            throw new IllegalArgumentException("Board name must contain 1-100 alphanumeric characters");
+        if (!validateBoardName(normalizedName)) {
+            throw new IllegalArgumentException("Board name must contain 1-100 alphanumeric characters. Underscores and dashes are permitted.");
         }
-        if (boardRepository.existsByName(name)) {
+        if (boardRepository.existsByName(normalizedName)) {
             throw new IllegalArgumentException("Board name already exists");
         }
 
@@ -50,7 +54,12 @@ public class BoardService {
     }
 
     public Board findByName(String name) {
-        return boardRepository.findByName(name)
+        String normalizedName = name == null ? "" : name.trim().toLowerCase();
+
+        if (!validateBoardName(normalizedName)) {
+            throw new IllegalArgumentException("Invalid board name");
+        }
+        return boardRepository.findByName(normalizedName)
                 .orElseThrow(() -> new IllegalArgumentException("Board not found"));
     }
 
