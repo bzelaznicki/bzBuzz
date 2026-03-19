@@ -1,60 +1,61 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register — bzBuzz</title>
-    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <title>Register</title>
 </head>
 <body>
-<div class="auth-container">
-    <div class="auth-card">
-        <h1 class="auth-logo">bzBuzz</h1>
-        <h2>Create an account</h2>
+<div layout:fragment="content">
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1 class="auth-logo">bzBuzz</h1>
+            <h2>Create an account</h2>
 
-        <div th:if="${errorMessage}" class="alert alert-error">
-            <p th:text="${errorMessage}"></p>
+            <div th:if="${errorMessage}" class="alert alert-error">
+                <p th:text="${errorMessage}"></p>
+            </div>
+
+            <form th:action="@{/register}" method="post">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text"
+                           id="username"
+                           name="username"
+                           placeholder="cooluser123"
+                           required
+                           autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email"
+                           id="email"
+                           name="email"
+                           placeholder="you@example.com"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password"
+                           id="password"
+                           name="password"
+                           placeholder="••••••••"
+                           required
+                           minlength="8">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full">
+                    Create account
+                </button>
+            </form>
+
+            <p class="auth-footer">
+                Already have an account?
+                <a th:href="@{/login}">Sign in</a>
+            </p>
         </div>
-
-        <form th:action="@{/register}" method="post">
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text"
-                       id="username"
-                       name="username"
-                       placeholder="cooluser123"
-                       required
-                       autofocus>
-            </div>
-
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email"
-                       id="email"
-                       name="email"
-                       placeholder="you@example.com"
-                       required>
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password"
-                       id="password"
-                       name="password"
-                       placeholder="••••••••"
-                       required
-                       minlength="8">
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-full">
-                Create account
-            </button>
-        </form>
-
-        <p class="auth-footer">
-            Already have an account?
-            <a th:href="@{/login}">Sign in</a>
-        </p>
     </div>
 </div>
 </body>
