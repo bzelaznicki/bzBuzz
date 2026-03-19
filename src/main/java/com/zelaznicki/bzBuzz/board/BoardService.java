@@ -98,11 +98,14 @@ public class BoardService {
 
     @Transactional
     public BoardMember changeMemberRole(Board board, User user, MembershipRole role) {
-        BoardMember member = boardMemberRepository.findByBoardAndUserForUpdate(board, user)
+        Board lockedBoard = boardRepository.findByIdForUpdate(board.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Board not found"));
+
+        BoardMember member = boardMemberRepository.findByBoardAndUserForUpdate(lockedBoard, user)
                 .orElseThrow(() -> new IllegalArgumentException("User is not a member of this board"));
 
         if (role == MembershipRole.MEMBER) {
-            long moderatorCount = boardMemberRepository.countByBoardAndRole(board, MembershipRole.MODERATOR);
+            long moderatorCount = boardMemberRepository.countByBoardAndRole(lockedBoard, MembershipRole.MODERATOR);
             if (moderatorCount <= 1 && member.getRole() == MembershipRole.MODERATOR) {
                 throw new IllegalArgumentException("Cannot demote the last moderator");
             }
@@ -113,14 +116,17 @@ public class BoardService {
 
     @Transactional
     public void removeMemberFromBoard(Board board, User user) {
-        BoardMember member = boardMemberRepository.findByBoardAndUserForUpdate(board, user)
+        Board lockedBoard = boardRepository.findByIdForUpdate(board.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Board not found"));
+
+        BoardMember member = boardMemberRepository.findByBoardAndUserForUpdate(lockedBoard, user)
                 .orElseThrow(() -> new IllegalArgumentException("User is not a member of this board"));
 
-        if (member.getRole() == MembershipRole.MODERATOR && boardMemberRepository.countByBoardAndRole(board, MembershipRole.MODERATOR) < 2) {
+        if (member.getRole() == MembershipRole.MODERATOR && boardMemberRepository.countByBoardAndRole(lockedBoard, MembershipRole.MODERATOR) < 2) {
             throw new IllegalArgumentException("A board cannot have 0 moderators");
         }
 
-        boardMemberRepository.deleteByBoardAndUser(board, user);
-        boardRepository.decrementMemberCount(board.getId());
+        boardMemberRepository.deleteByBoardAndUser(lockedBoard, user);
+        boardRepository.decrementMemberCount(lockedBoard.getId());
     }
 }
