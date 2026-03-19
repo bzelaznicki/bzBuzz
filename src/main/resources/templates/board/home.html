@@ -19,7 +19,7 @@
             <div class="board-meta">
                 <span th:text="${board.memberCount} + ' members'"></span>
                 <span class="meta-divider">·</span>
-                <span th:text="${board.createdBy != null ? 'Created by ' + ${board.createdBy.username} : 'Created by [deleted user]'"></span>
+                <span th:text="${board.createdBy != null ? 'Created by ' + board.createdBy.username : 'Created by [deleted user]'}"></span>
                 <span class="meta-divider">·</span>
                 <span th:text="'Since ' + ${#temporals.format(board.createdAt, 'MMM d, yyyy')}"></span>
                 <span th:if="${board.private}" class="badge badge-private">Private</span>
