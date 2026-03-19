@@ -18,7 +18,7 @@
 
     <div th:if="${boards.empty}" class="empty-state">
         <p>No boards yet.</p>
-        <a th:href="@{/b/create}" class="btn btn-primary btn-sm">Create the first one!</a>
+        <a sec:authorize="isAuthenticated()" th:href="@{/b/create}" class="btn btn-primary btn-sm">Create the first one!</a>
     </div>
 
     <div class="board-list" th:unless="${boards.empty}">

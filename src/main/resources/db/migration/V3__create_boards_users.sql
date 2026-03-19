@@ -8,3 +8,5 @@ CREATE TABLE boards_users (
     UNIQUE (user_id, board_id),
     CONSTRAINT chk_role CHECK (role IN ('MEMBER', 'MODERATOR'))
 );
+
+CREATE INDEX idx_boards_users_board_role ON boards_users (board_id, role);
