@@ -360,6 +360,10 @@ body {
 .posts {
     flex: 1;
 }
+.inline-form {
+    display: inline;
+    margin: 0;
+}
 
 @media (max-width: 768px) {
     .page-header,
