@@ -360,3 +360,18 @@ body {
 .posts {
     flex: 1;
 }
+
++@media (max-width: 768px) {
++    .page-header,
++    .board-card,
++    .board-header,
++    .board-content {
++        flex-direction: column;
++        align-items: stretch;
++    }
++
++    .board-card-meta,
++    .board-header-actions {
++        margin-left: 0;
++    }
++}
