@@ -41,4 +41,9 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     @Transactional
     @Query("UPDATE Post p SET p.voteScore = p.voteScore - 1 WHERE p.id = :id")
     void decrementVoteScore(@Param("id") UUID id);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Post p SET p.voteScore = p.voteScore + :delta WHERE p.id = :id")
+    void adjustVoteScore(@Param("id") UUID id, @Param("delta") int delta);
 }

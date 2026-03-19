@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -16,6 +17,10 @@ import java.util.UUID;
 public class PostService {
 
     private final PostRepository postRepository;
+    private final PostVoteRepository postVoteRepository;
+
+    private static final int UPVOTE = 1;
+    private static final int DOWNVOTE = -1;
 
     private static String generateSlug(String title) {
         String base = title.toLowerCase()
@@ -121,6 +126,53 @@ public class PostService {
         }
 
         return postRepository.save(post);
+    }
+
+
+    @Transactional
+    public void vote(Post post, User user, int voteType) {
+
+        Post lockedPost = postRepository.findByIdForUpdate(post.getId()).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        if (voteType != UPVOTE && voteType != DOWNVOTE) {
+            throw new IllegalArgumentException("Invalid vote");
+        }
+        PostVote postVote = PostVote.builder()
+                .post(lockedPost)
+                .user(user)
+                .voteType(voteType)
+                .build();
+
+        Optional<PostVote> existing =  postVoteRepository.findByPostAndUser(lockedPost, user);
+        if (existing.isPresent()) {
+            PostVote currentVote = existing.get();
+
+            if (currentVote.getVoteType() == voteType) {
+                // same type — un-vote, reverse the score
+                postVoteRepository.delete(currentVote);
+                if (voteType == UPVOTE) {
+                    postRepository.decrementVoteScore(lockedPost.getId());
+                } else {
+                    postRepository.incrementVoteScore(lockedPost.getId());
+                }
+                return;
+            }
+
+            // different type — switch vote, delta is ±2
+            currentVote.setVoteType(voteType);
+            postVoteRepository.save(currentVote);
+            if (voteType == UPVOTE) {
+                postRepository.adjustVoteScore(lockedPost.getId(), +2);
+
+            } else {
+                postRepository.adjustVoteScore(lockedPost.getId(), -2);
+
+            }
+            return;
+        }
+
+
+        postRepository.adjustVoteScore(lockedPost.getId(), voteType);
+        postVoteRepository.save(postVote);
     }
 
     @Transactional
