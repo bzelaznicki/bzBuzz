@@ -15,12 +15,22 @@ public class BoardService {
 
     @Transactional
     public Board create(String name, String description, String bannerUrl, User user, boolean isPrivate) {
+        //Rules for the board name:
+        //1. alphanumeric + - and _
+        //2. lowercase
+        //3. 1-100 characters
+
+        String normalizedName = name == null ? "" : name.trim().toLowerCase();
+
+        if (normalizedName.isBlank() || !normalizedName.matches("[a-z0-9_-]{1,100}")) {
+            throw new IllegalArgumentException("Board name must contain 1-100 alphanumeric characters");
+        }
         if (boardRepository.existsByName(name)) {
             throw new IllegalArgumentException("Board name already exists");
         }
 
         Board board = Board.builder()
-                .name(name)
+                .name(normalizedName)
                 .description(description)
                 .bannerUrl(bannerUrl)
                 .createdBy(user)
@@ -55,7 +65,7 @@ public class BoardService {
     public boolean isMember(Board board, User user) {
         return boardMemberRepository.existsByBoardAndUser(board, user);
     }
-    
+
     @Transactional
     public BoardMember joinBoard(Board board, User user) {
         if (boardMemberRepository.existsByBoardAndUser(board, user)) {
@@ -79,7 +89,7 @@ public class BoardService {
 
     @Transactional
     public BoardMember changeMemberRole(Board board, User user, MembershipRole role) {
-        BoardMember member = boardMemberRepository.findByBoardAndUser(board, user)
+        BoardMember member = boardMemberRepository.findByBoardAndUserForUpdate(board, user)
                 .orElseThrow(() -> new IllegalArgumentException("User is not a member of this board"));
 
         if (role == MembershipRole.MEMBER) {
@@ -94,7 +104,7 @@ public class BoardService {
 
     @Transactional
     public void removeMemberFromBoard(Board board, User user) {
-        BoardMember member = boardMemberRepository.findByBoardAndUser(board, user)
+        BoardMember member = boardMemberRepository.findByBoardAndUserForUpdate(board, user)
                 .orElseThrow(() -> new IllegalArgumentException("User is not a member of this board"));
 
         if (member.getRole() == MembershipRole.MODERATOR && boardMemberRepository.countByBoardAndRole(board, MembershipRole.MODERATOR) < 2) {
