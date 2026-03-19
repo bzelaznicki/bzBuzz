@@ -3,6 +3,7 @@ package com.zelaznicki.bzBuzz.board;
 import com.zelaznicki.bzBuzz.user.User;
 import com.zelaznicki.bzBuzz.user.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -40,11 +42,24 @@ public class BoardController {
 
     @GetMapping("/b/{name}")
     public String boardPage(@AuthenticationPrincipal UserDetails userDetails, @PathVariable String name, Model model) {
-        Board board = boardService.findByName(name);
-        model.addAttribute("board", board);
         User user = getCurrentUser(userDetails);
         model.addAttribute("currentUser", user);
-        model.addAttribute("isMember", user != null && boardService.isMember(board, user));
+        Board board;
+
+        try {
+            board = boardService.findByName(name);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+
+        boolean isMember = user != null && boardService.isMember(board, user);
+        if (board.isPrivate() && !isMember) {
+            throw  new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
+        model.addAttribute("board", board);
+
+        model.addAttribute("isMember", isMember);
 
 
         return "board/home";
