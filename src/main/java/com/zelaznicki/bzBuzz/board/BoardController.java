@@ -79,11 +79,11 @@ public class BoardController {
 
             User user = getCurrentUser(userDetails);
 
-            boardService.create(name, description, bannerUrl, user, isPrivate);
+            Board board = boardService.create(name, description, bannerUrl, user, isPrivate);
 
 
             redirectAttributes.addFlashAttribute("successMessage", "Board created");
-            return "redirect:/b/" + name;
+            return "redirect:/b/" + board.getName();
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/b/create";
