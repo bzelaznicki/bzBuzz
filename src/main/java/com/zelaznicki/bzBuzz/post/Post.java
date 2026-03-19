@@ -35,6 +35,9 @@ public class Post {
     @Column(nullable = false)
     private String title;
 
+    @Column(nullable = false, updatable = false, unique = true)
+    private String slug;
+
     @Column(columnDefinition = "TEXT")
     private String text;
 

@@ -3,6 +3,7 @@ CREATE TABLE posts (
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     board_id UUID NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
     text TEXT,
     post_type VARCHAR(50) NOT NULL DEFAULT 'TEXT',
     url VARCHAR(255),
