@@ -22,27 +22,23 @@ public class BoardController {
     private final BoardService boardService;
     private final UserService userService;
 
-    private User getCurrentUser(UserDetails userDetails) {
-        if (userDetails == null) return null;
-        return userService.findByEmail(userDetails.getUsername());
-    }
 
     @GetMapping("/")
     public String homepage(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        model.addAttribute("currentUser", getCurrentUser(userDetails));
+        model.addAttribute("currentUser", userService.findByUserDetails(userDetails));
         model.addAttribute("boards", boardService.findPublicBoards());
         return "home";
     }
 
     @GetMapping("/b/create")
     public String createBoard(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        model.addAttribute("currentUser", getCurrentUser(userDetails));
+        model.addAttribute("currentUser",  userService.findByUserDetails(userDetails));
         return "board/create";
     }
 
     @GetMapping("/b/{name}")
     public String boardPage(@AuthenticationPrincipal UserDetails userDetails, @PathVariable String name, Model model) {
-        User user = getCurrentUser(userDetails);
+        User user =  userService.findByUserDetails(userDetails);
         model.addAttribute("currentUser", user);
         Board board;
 
@@ -77,7 +73,7 @@ public class BoardController {
 
         try {
 
-            User user = getCurrentUser(userDetails);
+            User user =  userService.findByUserDetails(userDetails);
 
             Board board = boardService.create(name, description, bannerUrl, user, isPrivate);
 
@@ -98,7 +94,7 @@ public class BoardController {
     ) {
 
         try {
-            User user = getCurrentUser(userDetails);
+            User user = userService.findByUserDetails(userDetails);
             Board board = boardService.findByName(name);
             boardService.joinBoard(board, user);
 
@@ -119,7 +115,7 @@ public class BoardController {
     ) {
 
         try {
-            User user = getCurrentUser(userDetails);
+            User user = userService.findByUserDetails(userDetails);
             Board board = boardService.findByName(name);
             boardService.removeMemberFromBoard(board, user);
 

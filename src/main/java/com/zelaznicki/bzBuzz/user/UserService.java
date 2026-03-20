@@ -1,6 +1,7 @@
 package com.zelaznicki.bzBuzz.user;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,11 @@ public class UserService {
 
         return userRepository.save(user);
 
+    }
+
+    public User findByUserDetails(UserDetails userDetails) {
+        if (userDetails == null) return null;
+        return findByEmail(userDetails.getUsername());
     }
 
     public User findByEmail(String email) {
