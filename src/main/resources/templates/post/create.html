@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="'Submit to b/' + ${board.name}">Submit</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="post-form-container">
+        <div class="post-form-header">
+            <h2>Create a post</h2>
+            <span class="post-form-board">
+                posting to <a th:href="@{/b/{name}(name=${board.name})}"
+                              th:text="'b/' + ${board.name}"></a>
+            </span>
+        </div>
+
+        <div th:if="${errorMessage}" class="alert alert-error">
+            <p th:text="${errorMessage}"></p>
+        </div>
+
+        <div class="post-type-tabs">
+            <label class="post-type-tab active" id="tab-text">
+                <input type="radio" name="postType" value="TEXT" checked hidden> Text
+            </label>
+            <label class="post-type-tab" id="tab-url">
+                <input type="radio" name="postType" value="URL" hidden> URL
+            </label>
+        </div>
+
+        <form th:action="@{/b/{name}/submit(name=${board.name})}" method="post" class="post-form">
+            <input type="hidden" name="postType" id="postTypeInput" value="TEXT">
+
+            <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text"
+                       id="title"
+                       name="title"
+                       placeholder="An interesting title..."
+                       maxlength="255"
+                       required/>
+                <span class="form-hint">255 characters max</span>
+            </div>
+
+            <div class="form-group" id="textField">
+                <label for="text">Body</label>
+                <textarea id="text"
+                          name="text"
+                          placeholder="Share your thoughts..."
+                          rows="8"></textarea>
+            </div>
+
+            <div class="form-group" id="urlField" style="display:none">
+                <label for="url">URL</label>
+                <input type="url"
+                       id="url"
+                       name="url"
+                       placeholder="https://..."
+                       maxlength="255"/>
+            </div>
+
+            <div class="form-actions">
+                <a th:href="@{/b/{name}(name=${board.name})}"
+                   class="btn btn-ghost btn-sm">Cancel</a>
+                <button type="submit" class="btn btn-primary btn-sm">Post</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tabs = document.querySelectorAll('.post-type-tab');
+            const textField = document.getElementById('textField');
+            const urlField = document.getElementById('urlField');
+            const postTypeInput = document.getElementById('postTypeInput');
+            const textInput = document.getElementById('text');
+            const urlInput = document.getElementById('url');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function () {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+
+                    const value = this.querySelector('input[type="radio"]').value;
+                    postTypeInput.value = value;
+
+                    if (value === 'TEXT') {
+                        textField.style.display = 'block';
+                        urlField.style.display = 'none';
+                        urlInput.value = '';
+                    } else {
+                        textField.style.display = 'none';
+                        urlField.style.display = 'block';
+                        textInput.value = '';
+                    }
+                });
+            });
+        });
+    </script>
+</div>
+</body>
+</html>

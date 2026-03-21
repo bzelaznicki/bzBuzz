@@ -24,9 +24,9 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     List<Post> findAllByBoardAndStatusOrderByCreatedAtDesc(Board board, Status status);
     List<Post> findAllByBoardAndStatusOrderByUpdatedAtDesc(Board board, Status status);
     List<Post> findAllByBoardAndStatusOrderByVoteScoreDesc(Board board, Status status);
-    List<Post> findAllByUserAndStatusOrderByCreatedAtDesc(User user, Status status);
-    List<Post> findAllByUserAndStatusOrderByUpdatedAtDesc(User user, Status status);
-    List<Post> findAllByUserAndStatusOrderByVoteScoreDesc(User user, Status status);
+    List<Post> findAllByCreatorAndStatusOrderByCreatedAtDesc(User user, Status status);
+    List<Post> findAllByCreatorAndStatusOrderByUpdatedAtDesc(User user, Status status);
+    List<Post> findAllByCreatorAndStatusOrderByVoteScoreDesc(User user, Status status);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Post p WHERE p.id = :id")

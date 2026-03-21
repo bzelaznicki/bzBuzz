@@ -36,13 +36,16 @@ public class PostService {
 
     @Transactional
     public Post create(User user, Board board, String title, String text, PostType postType, String url) {
-        if (postType == PostType.TEXT && (text == null || text.isBlank())) {
+        String normalizedText = (text == null || text.isBlank()) ? null : text;
+        String normalizedUrl = (url == null || url.isBlank()) ? null : url;
+
+        if (postType == PostType.TEXT && normalizedText == null) {
             throw new IllegalArgumentException("Text posts must have a body");
         }
-        if (postType == PostType.URL && (url == null || url.isBlank())) {
+        if (postType == PostType.URL && normalizedUrl == null) {
             throw new IllegalArgumentException("URL posts must have a URL");
         }
-        if (text != null && url != null) {
+        if (normalizedText != null && normalizedUrl != null) {
             throw new IllegalArgumentException("A post cannot have both text and a URL");
         }
 
@@ -62,9 +65,9 @@ public class PostService {
                 .board(board)
                 .title(normalizedTitle)
                 .slug(slug)
-                .text(text)
+                .text(normalizedText)
                 .postType(postType)
-                .url(url)
+                .url(normalizedUrl)
                 .voteScore(0)
                 .status(Status.ENABLED)
                 .build();
@@ -92,9 +95,9 @@ public class PostService {
 
     public List<Post> findByUser(User user, PostSort postSort) {
         return switch (postSort) {
-            case NEW -> postRepository.findAllByUserAndStatusOrderByCreatedAtDesc(user, Status.ENABLED);
-            case UPDATED -> postRepository.findAllByUserAndStatusOrderByUpdatedAtDesc(user, Status.ENABLED);
-            case TOP -> postRepository.findAllByUserAndStatusOrderByVoteScoreDesc(user, Status.ENABLED);
+            case NEW -> postRepository.findAllByCreatorAndStatusOrderByCreatedAtDesc(user, Status.ENABLED);
+            case UPDATED -> postRepository.findAllByCreatorAndStatusOrderByUpdatedAtDesc(user, Status.ENABLED);
+            case TOP -> postRepository.findAllByCreatorAndStatusOrderByVoteScoreDesc(user, Status.ENABLED);
         };
     }
 

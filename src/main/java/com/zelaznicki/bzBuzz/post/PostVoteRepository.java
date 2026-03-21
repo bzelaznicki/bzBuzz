@@ -25,6 +25,6 @@ public interface PostVoteRepository extends JpaRepository<PostVote, UUID> {
 
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT pv FROM PostVote pv WHERE pm.id = :id")
+    @Query("SELECT pv FROM PostVote pv WHERE pv.id = :id")
     Optional<PostVote> findByIdForUpdate(@Param("id") UUID id);
 }
