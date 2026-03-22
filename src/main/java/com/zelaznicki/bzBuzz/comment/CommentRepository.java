@@ -1,6 +1,7 @@
 package com.zelaznicki.bzBuzz.comment;
 
 import com.zelaznicki.bzBuzz.post.Post;
+import com.zelaznicki.bzBuzz.user.User;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -19,6 +20,7 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
     List<Comment> findAllByPostAndParentIsNullOrderByVoteScoreDesc(Post post);
     List<Comment> findAllByPostAndParentIsNullOrderByCreatedAtDesc(Post post);
     List<Comment> findAllByParentOrderByCreatedAtAsc(Comment parent);
+    List<Comment> findAllByUser(User user);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c from Comment c WHERE c.id = :id")
