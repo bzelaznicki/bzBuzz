@@ -61,8 +61,11 @@ public class PostService {
             throw new IllegalArgumentException("URL posts must have a URL");
         }
 
-        if (url != null && (url.startsWith("javascript:") || url.startsWith("data:"))) {
-            throw new IllegalArgumentException("Invalid URL");
+        if (url != null) {
+            String lowerUrl = url.toLowerCase();
+            if (lowerUrl.startsWith("javascript:") && lowerUrl.startsWith("data:")) {
+                throw new IllegalArgumentException("Invalid URL");
+            }
         }
 
         if (text != null && url != null) {
