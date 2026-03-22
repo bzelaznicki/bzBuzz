@@ -19,3 +19,4 @@ CREATE TABLE posts (
 );
 
 CREATE INDEX idx_posts_board_id ON posts(board_id);
+CREATE INDEX idx_posts_board_created ON posts(board_id, created_at DESC);
