@@ -16,8 +16,6 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
 
 @Controller
 @RequiredArgsConstructor
@@ -29,27 +27,6 @@ public class PostController {
     private final PostVoteRepository postVoteRepository;
 
     /**
-     * Load a Board by name and enforce access rules for private boards.
-     *
-     * @param boardName the board's unique name
-     * @param user the current authenticated user, or null for anonymous access
-     * @return the resolved Board when found and accessible to the caller
-     * @throws ResponseStatusException with status 404 if the board name is unknown, or 403 if the board is private and the user is not a member
-     */
-    private Board getBoardAndCheckAccess(String boardName, User user) {
-        try {
-            Board board = boardService.findByName(boardName);
-            boolean isMember = user != null && boardService.isMember(board, user);
-            if (board.isPrivate() && !isMember) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-            }
-            return board;
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
-    }
-
-    /**
      * Resolves the board that the post is in
      * @param boardName board's unique name
      * @param slug post slug
@@ -57,7 +34,7 @@ public class PostController {
      * @return the post if it's validated
      */
     private Post getPostAndCheckAccess(String boardName, String slug, User user) {
-        Board board = getBoardAndCheckAccess(boardName, user);
+        Board board = boardService.getBoardAndCheckAccess(boardName, user);
         return postService.findByBoardAndSlug(board, slug);
     }
 
@@ -76,7 +53,7 @@ public class PostController {
     @GetMapping("/b/{boardName}/posts/{slug}")
     public String postPage(@AuthenticationPrincipal UserDetails userDetails, @PathVariable String boardName, @PathVariable String slug, Model model) {
         User user = userService.findByUserDetails(userDetails);
-        Board board = getBoardAndCheckAccess(boardName, user);
+        Board board = boardService.getBoardAndCheckAccess(boardName, user);
         boolean isMember = user != null && boardService.isMember(board, user);
         Post post = getPostAndCheckAccess(boardName, slug, user);
 
@@ -107,7 +84,7 @@ public class PostController {
             Model model
     ) {
         User user = userService.findByUserDetails(userDetails);
-        Board board = getBoardAndCheckAccess(boardName, user);
+        Board board = boardService.getBoardAndCheckAccess(boardName, user);
         boolean isMember = user != null && boardService.isMember(board, user);
         model.addAttribute("currentUser", user);
         model.addAttribute("board", board);
@@ -135,7 +112,7 @@ public class PostController {
             Model model
     ) {
         User user = userService.findByUserDetails(userDetails);
-        Board board = getBoardAndCheckAccess(boardName, user);
+        Board board = boardService.getBoardAndCheckAccess(boardName, user);
         boolean isMember = user != null && boardService.isMember(board, user);
         Post post = getPostAndCheckAccess(board.getName(), slug, user);
         model.addAttribute("currentUser", user);
@@ -184,7 +161,7 @@ public class PostController {
             Post post = postService.create(user, board, title, text, postType, url);
 
             redirectAttributes.addFlashAttribute("successMessage", "Post created");
-            return "redirect:/b/" + boardName + "/posts/" + post.getSlug();
+            return "redirect:/b/" + board.getName() + "/posts/" + post.getSlug();
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/b/" + boardName;
@@ -208,7 +185,7 @@ public class PostController {
             RedirectAttributes redirectAttributes
     ) {
         User user = userService.findByUserDetails(userDetails);
-        Board board = getBoardAndCheckAccess(boardName, user);
+        Board board = boardService.getBoardAndCheckAccess(boardName, user);
         Post post = getPostAndCheckAccess(boardName, slug, user);
         if (!post.getCreator().equals(user)) {
             redirectAttributes.addFlashAttribute("errorMessage", "You are not the owner of the post");
@@ -247,7 +224,7 @@ public class PostController {
             @RequestParam int voteType
     ) {
         User user = userService.findByUserDetails(userDetails);
-        Board board = getBoardAndCheckAccess(boardName, user);
+        Board board = boardService.getBoardAndCheckAccess(boardName, user);
         Post post = getPostAndCheckAccess(boardName, slug, user);
 
         boolean isMember = user != null && boardService.isMember(board, user);
@@ -287,7 +264,7 @@ public class PostController {
             RedirectAttributes redirectAttributes
     ) {
         User user = userService.findByUserDetails(userDetails);
-        Board board = getBoardAndCheckAccess(boardName, user);
+        Board board = boardService.getBoardAndCheckAccess(boardName, user);
         Post post = getPostAndCheckAccess(boardName, slug, user);
 
         if  (!post.getCreator().equals(user)) {

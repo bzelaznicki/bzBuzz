@@ -1,9 +1,12 @@
 package com.zelaznicki.bzBuzz.board;
 
+import com.zelaznicki.bzBuzz.post.PostController;
 import com.zelaznicki.bzBuzz.user.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -128,5 +131,26 @@ public class BoardService {
 
         boardMemberRepository.deleteByBoardAndUser(lockedBoard, user);
         boardRepository.decrementMemberCount(lockedBoard.getId());
+    }
+
+    /**
+     * Load a Board by name and enforce access rules for private boards.
+     *
+     * @param boardName      the board's unique name
+     * @param user           the current authenticated user, or null for anonymous access
+     * @return the resolved Board when found and accessible to the caller
+     * @throws ResponseStatusException with status 404 if the board name is unknown, or 403 if the board is private and the user is not a member
+     */
+    public Board getBoardAndCheckAccess(String boardName, User user) {
+        try {
+            Board board = findByName(boardName);
+            boolean isMember = user != null && isMember(board, user);
+            if (board.isPrivate() && !isMember) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            }
+            return board;
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
     }
 }
