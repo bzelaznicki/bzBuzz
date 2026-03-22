@@ -105,7 +105,7 @@ public class CommentService {
         }
 
         if (comment.getUser() == null || !comment.getUser().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("You are not authorized to perform this action");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to perform this action");
         }
 
         comment.setBody(body);
@@ -113,7 +113,7 @@ public class CommentService {
     }
     public void deleteComment(User user, Comment comment) {
         if (comment.getUser() == null || !comment.getUser().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("You are not permitted to perform this action");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not permitted to perform this action");
         }
         comment.setStatus(Status.DISABLED);
         comment.setBody("[deleted]");

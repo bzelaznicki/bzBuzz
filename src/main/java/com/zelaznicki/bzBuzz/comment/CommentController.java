@@ -31,7 +31,7 @@ public class CommentController {
     private final PostService postService;
     private final UserService userService;
     private final BoardService boardService;
-    
+
     @PostMapping("/b/{boardName}/posts/{slug}/comments")
     public String addTopLevelComment(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -92,6 +92,10 @@ public class CommentController {
             RedirectAttributes redirectAttributes
     ) {
         User user = userService.findByUserDetails(userDetails);
+
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
         Board board = boardService.getBoardAndCheckAccess(boardName, user);
 
         Comment comment = commentService.getComment(commentId);
@@ -122,7 +126,7 @@ public class CommentController {
         Board board = boardService.getBoardAndCheckAccess(boardName, user);
         Comment comment = commentService.getComment(commentId);
 
-        if (comment.getUser() == null || !comment.getUser().getId().equals(user.getId())) {
+        if (user == null || comment.getUser() == null || !comment.getUser().getId().equals(user.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
