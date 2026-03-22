@@ -160,7 +160,7 @@ public class PostService {
 
     public Post findByBoardAndSlug(Board board, String slug) {
         String normalizedSlug = getNormalizedSlug(slug);
-        Optional<Post> foundPost = postRepository.findBySlug(normalizedSlug);
+        Optional<Post> foundPost = postRepository.findBySlugAndStatus(normalizedSlug, Status.ENABLED);
 
         if (foundPost.isPresent()) {
             Post post = foundPost.get();
@@ -171,7 +171,7 @@ public class PostService {
                 throw new IllegalArgumentException("Post is not part of this board");
             }
         }
-        return null;
+        throw new IllegalArgumentException("Post not found");
     }
 
     /**
