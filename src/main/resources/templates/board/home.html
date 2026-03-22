@@ -33,6 +33,11 @@
             <form th:if="${isMember}" th:action="@{/b/{name}/leave(name=${board.name})}" method="post">
                 <button type="submit" class="btn btn-ghost btn-sm">Leave</button>
             </form>
+            <a th:if="${isMember}"
+               th:href="@{/b/{name}/submit(name=${board.name})}"
+               class="btn btn-primary btn-sm">
+                New post
+            </a>
         </div>
     </div>
 
@@ -46,14 +51,55 @@
 
     <div class="board-content">
         <div class="posts">
-            <div class="empty-state">
+
+            <div th:if="${posts.empty}" class="empty-state">
                 <p>No posts yet.</p>
                 <a sec:authorize="isAuthenticated()"
+                   th:if="${isMember}"
                    th:href="@{/b/{name}/submit(name=${board.name})}"
                    class="btn btn-primary btn-sm">
                     Create the first post
                 </a>
             </div>
+
+            <div th:unless="${posts.empty}" class="post-list">
+                <div th:each="post : ${posts}" class="post-card">
+
+                    <div th:replace="~{fragments/post-vote :: voteButtons(${post}, ${board.name}, ${userVotes})}"></div>
+
+                    <div class="post-content">
+                        <div class="post-meta">
+                            <span class="post-type-badge"
+                                  th:text="${post.postType}"
+                                  th:classappend="${post.postType.name() == 'URL'} ? ' badge-url' : ' badge-text'">
+                            </span>
+                            <span class="post-author"
+                                  th:text="${post.creator != null ? 'u/' + post.creator.username : '[deleted]'}">
+                            </span>
+                            <span class="meta-divider">·</span>
+                            <span class="post-date"
+                                  th:text="${#temporals.format(post.createdAt, 'MMM d, yyyy')}">
+                            </span>
+                        </div>
+
+                        <a class="post-title"
+                           th:href="@{/b/{name}/posts/{slug}(name=${board.name},slug=${post.slug})}"
+                           th:text="${post.title}">
+                        </a>
+
+                        <div th:if="${post.postType.name() == 'URL'}" class="post-url">
+                            <a th:if="${post.url != null and (post.url.startsWith('https://') or post.url.startsWith('http://'))}"
+                               th:href="${post.url}"
+                               th:text="${post.url}"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
     </div>
 

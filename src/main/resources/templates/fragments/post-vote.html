@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<div th:fragment="voteButtons(post, boardName, userVotes)"
+     class="post-vote"
+     th:data-slug="${post.slug}"
+     th:data-board="${boardName}">
+
+    <button class="btn-vote btn-vote-up"
+            sec:authorize="isAuthenticated()"
+            th:classappend="${userVotes != null and userVotes[post.id] == 1} ? ' active' : ''"
+            th:aria-pressed="${userVotes != null and userVotes[post.id] == 1} ? 'true' : 'false'"
+            th:data-slug="${post.slug}"
+            th:data-board="${boardName}"
+            aria-label="Upvote"
+            onclick="castVote(this, 1)">▲
+    </button>
+    <button class="btn-vote btn-vote-up"
+            sec:authorize="!isAuthenticated()"
+            disabled
+            aria-label="Upvote"
+            title="Log in to vote">▲
+    </button>
+
+    <span class="post-score" th:text="${post.voteScore}"></span>
+
+    <button class="btn-vote btn-vote-down"
+            sec:authorize="isAuthenticated()"
+            th:classappend="${userVotes != null and userVotes[post.id] == -1} ? ' active' : ''"
+            th:aria-pressed="${userVotes != null and userVotes[post.id] == -1} ? 'true' : 'false'"
+            th:data-slug="${post.slug}"
+            th:data-board="${boardName}"
+            aria-label="Downvote"
+            onclick="castVote(this, -1)">▼
+    </button>
+    <button class="btn-vote btn-vote-down"
+            sec:authorize="!isAuthenticated()"
+            disabled
+            aria-label="Downvote"
+            title="Log in to vote">▼
+    </button>
+
+</div>
+
+</body>
+</html>
