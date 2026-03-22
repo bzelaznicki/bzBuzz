@@ -13,4 +13,4 @@ CREATE TABLE comments (
 
 CREATE INDEX idx_comments_post_id ON comments(post_id);
 CREATE INDEX idx_comments_parent_id ON comments(parent_id);
-CREAET INDEX idx_comments_user_id ON comments(user_id);
+CREATE INDEX idx_comments_user_id ON comments(user_id);
