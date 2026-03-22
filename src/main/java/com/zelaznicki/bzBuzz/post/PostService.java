@@ -254,12 +254,13 @@ public class PostService {
     @Transactional
     public VoteResponse vote(Post post, User user, int voteType) {
 
-        Post lockedPost = postRepository.findByIdForUpdate(post.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
 
         if (voteType != UPVOTE && voteType != DOWNVOTE) {
             throw new IllegalArgumentException("Invalid vote");
         }
+        Post lockedPost = postRepository.findByIdForUpdate(post.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+
 
         int delta = 0;
         String action;
