@@ -22,11 +22,11 @@
         </div>
 
         <div class="post-type-tabs">
-            <label class="post-type-tab" id="tab-text" th:classappend="${post.postType.name() == 'TEXT'}? 'active':''">
-                <input type="radio" name="postType" value="TEXT" checked hidden> Text
+            <label class="post-type-tab" id="tab-text" th:classappend="${post.postType.name() == 'TEXT'} ? 'active' : ''">
+                <input type="radio" name="postType" value="TEXT" th:checked="${post.postType.name() == 'TEXT'}" hidden> Text
             </label>
-            <label class="post-type-tab" id="tab-url" th:classappend="${post.postType.name() == 'URL'}? 'active':''">
-                <input type="radio" name="postType" value="URL" hidden> URL
+            <label class="post-type-tab" id="tab-url" th:classappend="${post.postType.name() == 'URL'} ? 'active' : ''">
+                <input type="radio" name="postType" value="URL" th:checked="${post.postType.name() == 'URL'}" hidden> URL
             </label>
         </div>
 
