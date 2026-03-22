@@ -134,4 +134,8 @@ public class CommentService {
         return commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found"));
     }
+
+    public List<Comment> findAllRepliesByPost(Post post) {
+        return commentRepository.findAllByPostAndParentIsNotNullOrderByCreatedAtAsc(post);
+    }
 }

@@ -23,6 +23,7 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
     List<Comment> findAllByPostAndParentIsNullOrderByCreatedAtDesc(Post post);
     List<Comment> findAllByParentOrderByCreatedAtAsc(Comment parent);
     List<Comment> findAllByUser(User user);
+    List<Comment> findAllByPostAndParentIsNotNullOrderByCreatedAtAsc(Post post);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c from Comment c WHERE c.id = :id")
