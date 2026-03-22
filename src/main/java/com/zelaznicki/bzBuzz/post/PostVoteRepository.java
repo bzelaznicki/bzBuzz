@@ -1,5 +1,6 @@
 package com.zelaznicki.bzBuzz.post;
 
+import com.zelaznicki.bzBuzz.board.Board;
 import com.zelaznicki.bzBuzz.user.User;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -63,4 +64,7 @@ boolean existsByPostAndUser(Post post, User user);
  * @return a list of matching PostVote entities; empty if none exist
  */
 List<PostVote> findByUserAndPostIn(User user, List<Post> posts);
+
+    @Query("SELECT pv FROM PostVote pv WHERE pv.user = :user AND pv.post.board = :board AND pv.post.status = 'ENABLED'")
+    List<PostVote> findByUserAndBoard(@Param("user") User user, @Param("board") Board board);
 }

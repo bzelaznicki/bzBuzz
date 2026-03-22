@@ -304,8 +304,8 @@ public class PostService {
      * @return      a map from post `UUID` to vote type (`1` for upvote, `-1` for downvote)
      */
     public Map<UUID, Integer> findVotesByBoardAndUser(Board board, User user) {
-        List<Post> posts =  postRepository.findAllByBoardAndStatusOrderByCreatedAtDesc(board, Status.ENABLED);
-        List<PostVote> userVotes = postVoteRepository.findByUserAndPostIn(user, posts);
+
+        List<PostVote> userVotes = postVoteRepository.findByUserAndBoard(user, board);
         return userVotes.stream()
                 .collect(Collectors.toMap(
                         v -> v.getPost().getId(),
