@@ -142,6 +142,22 @@ public class PostService {
         };
     }
 
+    public Post findByBoardAndSlug(Board board, String slug) {
+        String normalizedSlug = getNormalizedSlug(slug);
+        Optional<Post> foundPost = postRepository.findBySlug(normalizedSlug);
+
+        if (foundPost.isPresent()) {
+            Post post = foundPost.get();
+
+            if (post.getBoard().equals(board)) {
+                return post;
+            } else {
+                throw new IllegalArgumentException("Post is not part of this board");
+            }
+        }
+        return null;
+    }
+
     /**
      * Retrieve enabled posts created by a user, ordered according to the specified sort.
      *

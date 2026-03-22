@@ -50,6 +50,18 @@ public class PostController {
     }
 
     /**
+     * Resolves the board that the post is in
+     * @param boardName board's unique name
+     * @param slug post slug
+     * @param user the current authenticated user, or null for anonymous access
+     * @return the post if it's validated
+     */
+    private Post getPostAndCheckAccess(String boardName, String slug, User user) {
+        Board board = getBoardAndCheckAccess(boardName, user);
+        return postService.findByBoardAndSlug(board, slug);
+    }
+
+    /**
      * Render the post view page for a post identified by `slug` within the specified board and populate the model.
      *
      * Populates the model with `userVotes`, `currentUser`, `board`, `post`, and `isMember`. Enforces access rules for private boards.
@@ -66,7 +78,7 @@ public class PostController {
         User user = userService.findByUserDetails(userDetails);
         Board board = getBoardAndCheckAccess(boardName, user);
         boolean isMember = user != null && boardService.isMember(board, user);
-        Post post = postService.findBySlug(slug);
+        Post post = getPostAndCheckAccess(boardName, slug, user);
 
         if (board.isPrivate() && !isMember) {
             throw  new ResponseStatusException(HttpStatus.FORBIDDEN);
@@ -125,7 +137,7 @@ public class PostController {
         User user = userService.findByUserDetails(userDetails);
         Board board = getBoardAndCheckAccess(boardName, user);
         boolean isMember = user != null && boardService.isMember(board, user);
-        Post post = postService.findBySlug(slug);
+        Post post = getPostAndCheckAccess(board.getName(), slug, user);
         model.addAttribute("currentUser", user);
         model.addAttribute("board", board);
         model.addAttribute("post", post);
@@ -195,16 +207,21 @@ public class PostController {
             @PathVariable String slug,
             RedirectAttributes redirectAttributes
     ) {
+        User user = userService.findByUserDetails(userDetails);
+        Board board = getBoardAndCheckAccess(boardName, user);
+        Post post = getPostAndCheckAccess(boardName, slug, user);
+        if (!post.getCreator().equals(user)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You are not the owner of the post");
+            return "redirect:/b/" + boardName + "/posts/" + post.getSlug();
+        }
         try {
-            User user = userService.findByUserDetails(userDetails);
-
             postService.deletePost(slug, user);
 
             redirectAttributes.addFlashAttribute("successMessage", "Post deleted");
             return "redirect:/b/" + boardName;
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/b/" + boardName + "/posts/" + slug;
+            return "redirect:/b/" + board.getName() + "/posts/" + post.getSlug();
         }
     }
 
@@ -229,9 +246,16 @@ public class PostController {
             @PathVariable String slug,
             @RequestParam int voteType
     ) {
+        User user = userService.findByUserDetails(userDetails);
+        Board board = getBoardAndCheckAccess(boardName, user);
+        Post post = getPostAndCheckAccess(boardName, slug, user);
+
+        boolean isMember = user != null && boardService.isMember(board, user);
+
+        if (board.isPrivate() && !isMember) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this board");
+        }
         try {
-            User user = userService.findByUserDetails(userDetails);
-            Post post = postService.findBySlug(slug);
             VoteResponse result = postService.vote(post, user, voteType);
             return ResponseEntity.ok(Map.of("voteScore", result.voteScore(), "action", result.action()));
         } catch (IllegalArgumentException e) {
@@ -261,12 +285,20 @@ public class PostController {
             @PathVariable String slug,
             RedirectAttributes redirectAttributes
     ) {
-        try {
-            User user = userService.findByUserDetails(userDetails);
-            Post post = postService.updatePost(slug, user, title, text, url);
+        User user = userService.findByUserDetails(userDetails);
+        Board board = getBoardAndCheckAccess(boardName, user);
+        Post post = getPostAndCheckAccess(boardName, slug, user);
 
-            redirectAttributes.addFlashAttribute("successMessage", "Post updated");
+        if  (!post.getCreator().equals(user)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You are not the owner of the post");
             return "redirect:/b/" + boardName + "/posts/" + post.getSlug();
+        }
+
+        try {
+
+            Post updatedPost = postService.updatePost(slug, user, title, text, url);
+            redirectAttributes.addFlashAttribute("successMessage", "Post updated");
+            return "redirect:/b/" + board.getName() + "/posts/" + updatedPost.getSlug();
 
         }  catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
