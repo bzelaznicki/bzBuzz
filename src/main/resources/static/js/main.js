@@ -43,6 +43,8 @@ async function castVote(button, voteType) {
 
             if (data.action === 'upvoted') upBtn.classList.add('active');
             if (data.action === 'downvoted') downBtn.classList.add('active');
+        } else {
+        console.error("Vote failed with status:", response.status);
         }
     } catch (err) {
         console.error('Vote failed', err);
