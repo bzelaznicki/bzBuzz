@@ -137,44 +137,40 @@ public class PostService {
 
         Post lockedPost = postRepository.findByIdForUpdate(post.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+
         if (voteType != UPVOTE && voteType != DOWNVOTE) {
             throw new IllegalArgumentException("Invalid vote");
         }
-        PostVote postVote = PostVote.builder()
-                .post(lockedPost)
-                .user(user)
-                .voteType(voteType)
-                .build();
+
+        int delta = 0;
 
         Optional<PostVote> existing = postVoteRepository.findByPostAndUser(lockedPost, user);
         if (existing.isPresent()) {
             PostVote currentVote = existing.get();
 
             if (currentVote.getVoteType() == voteType) {
+                // un-vote
                 postVoteRepository.delete(currentVote);
-                if (voteType == UPVOTE) {
-                    postRepository.decrementVoteScore(lockedPost.getId());
-                } else {
-                    postRepository.incrementVoteScore(lockedPost.getId());
-                }
-                return postRepository.findById(lockedPost.getId())
-                        .map(Post::getVoteScore)
-                        .orElse(0);
+                delta = -voteType;
+            } else {
+                // switch vote
+                currentVote.setVoteType(voteType);
+                postVoteRepository.save(currentVote);
+                delta = voteType * 2;
             }
-
-            currentVote.setVoteType(voteType);
-            postVoteRepository.save(currentVote);
-            postRepository.adjustVoteScore(lockedPost.getId(), voteType == UPVOTE ? +2 : -2);
-            return postRepository.findById(lockedPost.getId())
-                    .map(Post::getVoteScore)
-                    .orElse(0);
+        } else {
+            // new vote
+            PostVote postVote = PostVote.builder()
+                    .post(lockedPost)
+                    .user(user)
+                    .voteType(voteType)
+                    .build();
+            postVoteRepository.save(postVote);
+            delta = voteType;
         }
 
-        postRepository.adjustVoteScore(lockedPost.getId(), voteType);
-        postVoteRepository.save(postVote);
-        return postRepository.findById(lockedPost.getId())
-                .map(Post::getVoteScore)
-                .orElse(0);
+        postRepository.adjustVoteScore(lockedPost.getId(), delta);
+        return lockedPost.getVoteScore() + delta;
     }
 
     @Transactional

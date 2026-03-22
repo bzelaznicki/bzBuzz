@@ -23,6 +23,8 @@ async function castVote(button, voteType) {
 
         if (response.ok) {
             const data = await response.json();
+            console.log('data:', data);
+            console.log('scoreEl:', scoreEl);
             scoreEl.textContent = data.voteScore;
         }
     } catch (err) {
