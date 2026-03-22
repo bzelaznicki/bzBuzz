@@ -65,17 +65,23 @@
                 <div th:each="post : ${posts}" class="post-card">
 
                     <div class="post-vote" th:data-slug="${post.slug}" th:data-board="${board.name}">
-                        <button class="btn-vote btn-vote-up"
+                        <button class="btn-vote btn-vote-up" sec:authorize="isAuthenticated()"
                                 th:classappend="${userVotes != null and userVotes[post.id] == 1} ? ' active' : ''"
                                 th:data-slug="${post.slug}"
                                 th:data-board="${board.name}"
-                                onclick="castVote(this, 1)">▲</button>
+                                onclick="castVote(this, 1)">▲
+                        </button>
+                        <button class="btn-vote btn-vote-up" sec:authorize="!isAuthenticated()" disabled
+                                title="Log in to vote">▲</button>
                         <span class="post-score" th:text="${post.voteScore}"></span>
-                        <button class="btn-vote btn-vote-down"
+                        <button class="btn-vote btn-vote-down" sec:authorize="isAuthenticated()"
                                 th:classappend="${userVotes != null and userVotes[post.id] == -1} ? ' active' : ''"
                                 th:data-slug="${post.slug}"
                                 th:data-board="${board.name}"
-                                onclick="castVote(this, -1)">▼</button>
+                                onclick="castVote(this, -1)">▼
+                        </button>
+                        <button class="btn-vote btn-vote-down" sec:authorize="!isAuthenticated()" disabled
+                                title="Log in to vote">▼</button>
                     </div>
 
                     <div class="post-content">
