@@ -11,6 +11,7 @@
     <button class="btn-vote btn-vote-up"
             sec:authorize="isAuthenticated()"
             th:classappend="${userVotes != null and userVotes[post.id] == 1} ? ' active' : ''"
+            th:aria-pressed="${userVotes != null and userVotes[post.id] == 1} ? 'true' : 'false'"
             th:data-slug="${post.slug}"
             th:data-board="${boardName}"
             aria-label="Upvote"
@@ -19,6 +20,7 @@
     <button class="btn-vote btn-vote-up"
             sec:authorize="!isAuthenticated()"
             disabled
+            aria-label="Upvote"
             title="Log in to vote">▲
     </button>
 
@@ -27,6 +29,7 @@
     <button class="btn-vote btn-vote-down"
             sec:authorize="isAuthenticated()"
             th:classappend="${userVotes != null and userVotes[post.id] == -1} ? ' active' : ''"
+            th:aria-pressed="${userVotes != null and userVotes[post.id] == -1} ? 'true' : 'false'"
             th:data-slug="${post.slug}"
             th:data-board="${boardName}"
             aria-label="Downvote"
@@ -35,6 +38,7 @@
     <button class="btn-vote btn-vote-down"
             sec:authorize="!isAuthenticated()"
             disabled
+            aria-label="Downvote"
             title="Log in to vote">▼
     </button>
 
