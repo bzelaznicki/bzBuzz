@@ -109,7 +109,8 @@
                         </a>
 
                         <div th:if="${post.postType.name() == 'URL'}" class="post-url">
-                            <a th:href="${post.url}"
+                            <a th:if="${post.url != null and (post.url.startsWith('https://') or post.url.startsWith('http://'))}"
+                               th:href="${post.url}"
                                th:text="${post.url}"
                                target="_blank"
                                rel="noopener noreferrer">

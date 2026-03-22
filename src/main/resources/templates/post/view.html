@@ -76,7 +76,7 @@
                        th:text="${post.text}"
                        class="post-text">
                     </p>
-                    <a th:if="${post.postType.name() == 'URL'}"
+                    <a th:if="${post.postType.name() == 'URL' and post.url != null and (post.url.startsWith('https://') or post.url.startsWith('http://'))}"
                        th:href="${post.url}"
                        th:text="${post.url}"
                        class="post-external-link"
