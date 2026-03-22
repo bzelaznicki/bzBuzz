@@ -117,4 +117,7 @@ List<Post> findAllByCreatorAndStatusOrderByVoteScoreDesc(User user, Status statu
     @Transactional
     @Query("UPDATE Post p SET p.voteScore = p.voteScore + :delta WHERE p.id = :id")
     void adjustVoteScore(@Param("id") UUID id, @Param("delta") int delta);
+
+
+    Optional<Post> findBySlugAndStatus(String slug,  Status status);
 }

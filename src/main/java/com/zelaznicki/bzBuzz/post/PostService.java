@@ -135,7 +135,7 @@ public class PostService {
     public Post findBySlug(String slug) {
         String normalizedSlug = getNormalizedSlug(slug);
 
-        return postRepository.findBySlug(normalizedSlug)
+        return postRepository.findBySlugAndStatus(normalizedSlug, Status.ENABLED)
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));
     }
 
