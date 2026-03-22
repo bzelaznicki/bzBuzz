@@ -231,11 +231,7 @@ public class PostService {
         if (url != null && !url.isBlank()) {
             post.setUrl(normalizedUrl);
         }
-        try {
-            validatePostData(post.getTitle(), post.getText(), post.getPostType(), post.getUrl());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(e.getMessage());
-        }
+        validatePostData(post.getTitle(), post.getText(), post.getPostType(), post.getUrl());
 
         return postRepository.save(post);
     }
