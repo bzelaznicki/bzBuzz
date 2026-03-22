@@ -7,6 +7,7 @@ import com.zelaznicki.bzBuzz.post.VoteResponse;
 import com.zelaznicki.bzBuzz.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,7 @@ public class CommentService {
         return commentRepository.findAllByParentOrderByCreatedAtAsc(parent);
     }
 
+    @Transactional
     public VoteResponse vote(Comment comment, User user, int voteType) {
 
         if (voteType != UPVOTE && voteType != DOWNVOTE) {
@@ -107,7 +109,10 @@ public class CommentService {
         comment.setBody(body);
         return commentRepository.save(comment);
     }
-    public void deleteComment(Comment comment) {
+    public void deleteComment(User user, Comment comment) {
+        if (comment.getUser() == null || !comment.getUser().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("You are not permitted to perform this action");
+        }
         comment.setStatus(Status.DISABLED);
         comment.setBody("[deleted]");
         commentRepository.save(comment);

@@ -28,8 +28,7 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
     @Query("SELECT c from Comment c WHERE c.id = :id")
     Optional<Comment> findByIdForUpdate(@Param("id") UUID id);
 
-    @Modifying
-    @Transactional
+    @Modifying(clearAutomatically = true)
     @Query("UPDATE Comment c SET c.voteScore = c.voteScore + :delta WHERE c.id = :id")
     void adjustVoteScore(@Param("id") UUID id, @Param("delta") int delta);
 
