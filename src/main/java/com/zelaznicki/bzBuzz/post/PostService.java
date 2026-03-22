@@ -206,7 +206,7 @@ public class PostService {
         if (normalizedSlug.isEmpty()) {
             throw new IllegalArgumentException("Slug cannot be empty");
         }
-        Post post = postRepository.findBySlug(normalizedSlug).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        Post post = postRepository.findBySlugAndStatus(normalizedSlug, Status.ENABLED).orElseThrow(() -> new IllegalArgumentException("Post not found"));
 
         if (post.getCreator() == null || !post.getCreator().getId().equals(user.getId())) {
             throw new IllegalArgumentException("You are not authorized to perform this action");
@@ -350,7 +350,7 @@ public class PostService {
             throw new IllegalArgumentException("Slug cannot be empty");
         }
 
-        Post post = postRepository.findBySlug(normalizedSlug).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        Post post = postRepository.findBySlugAndStatus(normalizedSlug, Status.ENABLED).orElseThrow(() -> new IllegalArgumentException("Post not found"));
 
         if (post.getCreator() == null || !post.getCreator().getId().equals(user.getId())) {
             throw new IllegalArgumentException("You are not authorized to perform this action");
