@@ -28,6 +28,14 @@ public class PostController {
     private final UserService userService;
     private final PostVoteRepository postVoteRepository;
 
+    /**
+     * Load a Board by name and enforce access rules for private boards.
+     *
+     * @param boardName the board's unique name
+     * @param user the current authenticated user, or null for anonymous access
+     * @return the resolved Board when found and accessible to the caller
+     * @throws ResponseStatusException with status 404 if the board name is unknown, or 403 if the board is private and the user is not a member
+     */
     private Board getBoardAndCheckAccess(String boardName, User user) {
         try {
             Board board = boardService.findByName(boardName);
@@ -41,6 +49,18 @@ public class PostController {
         }
     }
 
+    /**
+     * Render the post view page for a post identified by `slug` within the specified board and populate the model.
+     *
+     * Populates the model with `userVotes`, `currentUser`, `board`, `post`, and `isMember`. Enforces access rules for private boards.
+     *
+     * @param userDetails the authenticated principal (may be null for anonymous requests)
+     * @param boardName the name of the board containing the post
+     * @param slug the post's slug identifier
+     * @param model the MVC model to populate for the view
+     * @return the view name for displaying a post ("post/view")
+     * @throws org.springframework.web.server.ResponseStatusException if the board is not found (404) or access is forbidden for private boards (403)
+     */
     @GetMapping("/b/{boardName}/posts/{slug}")
     public String postPage(@AuthenticationPrincipal UserDetails userDetails, @PathVariable String boardName, @PathVariable String slug, Model model) {
         User user = userService.findByUserDetails(userDetails);
@@ -60,6 +80,14 @@ public class PostController {
         return "post/view";
     }
 
+    /**
+     * Prepare the model and enforce access for the board's "submit post" page.
+     *
+     * @param userDetails the authentication principal used to resolve the current application User; may be null
+     * @param boardName   the name of the board for which the submit page is requested
+     * @param model       the MVC model populated with `currentUser`, `board`, and `isMember`
+     * @return            the view name for the post creation page ("post/create")
+     */
     @GetMapping("/b/{boardName}/submit")
     public String submitPostPage(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -77,6 +105,16 @@ public class PostController {
 
     }
 
+    /**
+     * Render the edit page for a post in the specified board.
+     *
+     * The model is populated with `currentUser`, `board`, `post`, and `isMember`.
+     *
+     * @param boardName the name of the board containing the post
+     * @param slug      the post's slug identifier
+     * @param model     MVC model used to expose attributes to the view
+     * @return          the view name for the post edit page ("post/edit")
+     */
     @GetMapping("/b/{boardName}/posts/{slug}/edit")
     public String editPostPage(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -97,6 +135,20 @@ public class PostController {
     }
 
 
+    /**
+     * Creates a new post on the specified board and redirects to the created post on success,
+     * or back to the board page on validation error.
+     *
+     * @param userDetails        the authenticated user's details (may be null for anonymous)
+     * @param boardName          the board's name where the post will be created
+     * @param title              the post title
+     * @param text               optional post body text
+     * @param postType           the type of the post (e.g., text, link)
+     * @param url                optional URL for link posts
+     * @param redirectAttributes used to set flash attributes for success or error messages
+     * @return                   a redirect view: to the new post on success or to the board on error
+     * @throws ResponseStatusException if the target board is private and the current user is not a member
+     */
     @PostMapping("/b/{boardName}/submit")
     public String submitPost(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -127,6 +179,15 @@ public class PostController {
         }
     }
 
+    /**
+     * Handles a POST request to delete the post identified by `slug` and redirects to the appropriate page.
+     *
+     * On success, adds a flash attribute `successMessage = "Post deleted"` and redirects to `/b/{boardName}`.
+     * If deletion fails with an `IllegalArgumentException`, adds a flash attribute `errorMessage` with the exception
+     * message and redirects back to `/b/{boardName}/posts/{slug}`.
+     *
+     * @return the redirect view: on success `redirect:/b/{boardName}`, on failure `redirect:/b/{boardName}/posts/{slug}`
+     */
     @PostMapping("/b/{boardName}/posts/{slug}/delete")
     public String deletePost(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -147,6 +208,19 @@ public class PostController {
         }
     }
 
+    /**
+     * Apply a vote by the authenticated user to the specified post and return the result as JSON.
+     *
+     * Resolves the authenticated principal into the application user, loads the post by slug,
+     * performs the vote operation, and responds with the updated vote score and the action taken.
+     *
+     * @param userDetails the Spring Security principal for the currently authenticated user
+     * @param boardName the board's name from the request path
+     * @param slug the post's slug from the request path
+     * @param voteType an integer representing the vote action
+     * @return a JSON object with keys `voteScore` (the updated score) and `action` (the performed action) on success;
+     *         on invalid input returns a JSON object with key `error` and a 400 Bad Request status
+     */
     @PostMapping("/api/b/{boardName}/posts/{slug}/vote")
     @ResponseBody
     public ResponseEntity<?> voteApi(
@@ -165,6 +239,18 @@ public class PostController {
         }
     }
 
+    /**
+     * Handle form submission to update an existing post and redirect to the appropriate page.
+     *
+     * @param userDetails         the authenticated principal for the current user
+     * @param boardName           the board's name used to build redirect URLs
+     * @param title               the new title for the post
+     * @param text                the new text content for the post (may be null)
+     * @param url                 the new URL for the post (may be null)
+     * @param slug                the slug identifying the post to update
+     * @param redirectAttributes  used to add flash attributes; sets `successMessage` on success or `errorMessage` on failure
+     * @return                    the view name for a redirect: on success redirects to the updated post page, on failure redirects back to the post edit page
+     */
     @PostMapping("/b/{boardName}/posts/{slug}/edit")
     public String editPost(
             @AuthenticationPrincipal UserDetails userDetails,

@@ -1,3 +1,13 @@
+/**
+ * Send a vote for a post to the server and update the post's vote UI.
+ *
+ * Disables vote buttons in the post while the request is in flight, posts `voteType`
+ * to the board/post vote endpoint (including the page CSRF token when present), updates
+ * the displayed score and active vote button based on the server response, and then
+ * re-enables the buttons.
+ * @param {HTMLElement} button - The clicked vote button element; must have `data-slug` and `data-board` and be inside a `.post-vote` container that contains `.post-score` and `.btn-vote` elements.
+ * @param {string} voteType - The vote action value sent as the `voteType` form field (e.g., `"upvoted"` or `"downvoted"`).
+ */
 async function castVote(button, voteType) {
     const slug = button.dataset.slug;
     const board = button.dataset.board;

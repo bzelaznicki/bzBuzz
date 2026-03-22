@@ -33,6 +33,13 @@ public class BoardController {
     private final UserService userService;
     private final PostService postService;
 
+    /**
+     * Render the home page and populate the model with the current user and public boards.
+     *
+     * @param userDetails the authenticated user's details from Spring Security, or {@code null} if unauthenticated
+     * @param model       the Spring MVC model to populate for the view
+     * @return            the view name "home"
+     */
     @GetMapping("/")
     public String homepage(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         model.addAttribute("currentUser", userService.findByUserDetails(userDetails));
@@ -40,12 +47,31 @@ public class BoardController {
         return "home";
     }
 
+    /**
+     * Render the board creation page and expose the currently authenticated user to the view.
+     *
+     * @param userDetails the Spring Security principal for the current request (may be null for anonymous users)
+     * @param model       the MVC model to populate attributes for the view; this method adds a `currentUser` attribute
+     * @return            the view name for the board creation page ("board/create")
+     */
     @GetMapping("/b/create")
     public String createBoard(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         model.addAttribute("currentUser",  userService.findByUserDetails(userDetails));
         return "board/create";
     }
 
+    /**
+     * Render a board page showing board details, posts, membership status, and the current user's votes.
+     *
+     * Adds the following model attributes: "currentUser", "board", "isMember", "posts", and "userVotes".
+     *
+     * @param userDetails the authenticated principal (may be null)
+     * @param name the board name from the path
+     * @param model the MVC model to populate for the view
+     * @return the view name "board/home"
+     * @throws ResponseStatusException with status 404 if no board with the given name exists
+     * @throws ResponseStatusException with status 403 if the board is private and the user is not a member
+     */
     @GetMapping("/b/{name}")
     public String boardPage(@AuthenticationPrincipal UserDetails userDetails, @PathVariable String name, Model model) {
         User user =  userService.findByUserDetails(userDetails);
@@ -84,6 +110,17 @@ public class BoardController {
         return "board/home";
     }
 
+    /**
+     * Creates a new board with the given properties and redirects to the newly created board page.
+     *
+     * @param userDetails      the currently authenticated user's details
+     * @param name             the desired unique name for the board
+     * @param description      optional textual description for the board; may be null
+     * @param bannerUrl        optional URL of the board banner image; may be null
+     * @param isPrivate        `true` to create a private board, `false` to create a public board
+     * @param redirectAttributes flash attributes used to convey success or error messages to the redirected view
+     * @return                 a redirect string to the created board on success, or a redirect back to the board creation page on error
+     */
     @PostMapping("/b/create")
     public String create(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -109,6 +146,17 @@ public class BoardController {
         }
     }
 
+    /**
+     * Join the authenticated user to the board identified by `name` and redirect back to that board page.
+     *
+     * On success a flash attribute "successMessage" is added; on failure a flash attribute "errorMessage"
+     * containing the exception message is added.
+     *
+     * @param userDetails         the Spring Security principal for the currently authenticated user
+     * @param name                the board's name (path variable)
+     * @param redirectAttributes  used to add flash attributes for the redirect
+     * @return                    the redirect view name to the board page (e.g. "redirect:/b/{name}")
+     */
     @PostMapping("/b/{name}/join")
     public String joinBoard(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -130,6 +178,17 @@ public class BoardController {
 
     }
 
+    /**
+     * Removes the authenticated user from the board identified by {@code name} and redirects back to that board's page.
+     *
+     * If the removal succeeds, adds a flash attribute named {@code successMessage} with value {@code "Left board"}.
+     * If an {@link IllegalArgumentException} occurs, adds a flash attribute named {@code errorMessage} containing the exception message.
+     *
+     * @param userDetails        the Spring Security principal for the currently authenticated user
+     * @param name               the unique name of the board to leave
+     * @param redirectAttributes container for flash attributes to be available after the redirect
+     * @return                   a redirect string to the board page ("/b/{name}")
+     */
     @PostMapping("/b/{name}/leave")
     public String leaveBoard(
             @AuthenticationPrincipal UserDetails userDetails,

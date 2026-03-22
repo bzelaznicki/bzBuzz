@@ -36,6 +36,11 @@ public class PostVote {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    /**
+     * Sets the `createdAt` timestamp to the current local date-time before the entity is persisted.
+     *
+     * Called by the JPA lifecycle on initial persist.
+     */
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
