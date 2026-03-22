@@ -6,7 +6,7 @@
  * the displayed score and active vote button based on the server response, and then
  * re-enables the buttons.
  * @param {HTMLElement} button - The clicked vote button element; must have `data-slug` and `data-board` and be inside a `.post-vote` container that contains `.post-score` and `.btn-vote` elements.
- * @param {string} voteType - The vote action value sent as the `voteType` form field (e.g., `"upvoted"` or `"downvoted"`).
+ * @param {string} voteType - The vote value sent as the `voteType` form field (e.g., `1` for upvote, `-1` for downvote).
  */
 async function castVote(button, voteType) {
     const slug = button.dataset.slug;
@@ -55,6 +55,7 @@ async function castVote(button, voteType) {
 
         } else {
         console.error("Vote failed with status:", response.status);
+        alert("Could not submit vote. Please try again.");
         }
     } catch (err) {
         console.error('Vote failed', err);
