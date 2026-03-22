@@ -1,5 +1,8 @@
 package com.zelaznicki.bzBuzz.board;
 
+import com.zelaznicki.bzBuzz.common.PostSort;
+import com.zelaznicki.bzBuzz.post.Post;
+import com.zelaznicki.bzBuzz.post.PostService;
 import com.zelaznicki.bzBuzz.user.User;
 import com.zelaznicki.bzBuzz.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -15,12 +18,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
+
 @Controller
 @RequiredArgsConstructor
 public class BoardController {
 
     private final BoardService boardService;
     private final UserService userService;
+    private final PostService postService;
 
 
     @GetMapping("/")
@@ -53,9 +59,15 @@ public class BoardController {
             throw  new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
+
+
         model.addAttribute("board", board);
 
         model.addAttribute("isMember", isMember);
+
+        List<Post> posts = postService.findByBoard(board, PostSort.TOP);
+
+        model.addAttribute("posts", posts);
 
 
         return "board/home";

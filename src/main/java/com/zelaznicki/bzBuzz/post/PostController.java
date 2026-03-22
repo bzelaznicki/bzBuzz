@@ -6,16 +6,16 @@ import com.zelaznicki.bzBuzz.user.User;
 import com.zelaznicki.bzBuzz.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -138,27 +138,21 @@ public class PostController {
         }
     }
 
-    @PostMapping("/b/{boardName}/posts/{slug}/vote")
-    public String vote(
+    @PostMapping("/api/b/{boardName}/posts/{slug}/vote")
+    @ResponseBody
+    public ResponseEntity<?> voteApi(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable String boardName,
             @PathVariable String slug,
-            @RequestParam int voteType,
-            RedirectAttributes redirectAttributes
+            @RequestParam int voteType
     ) {
-
         try {
-
-            User user =  userService.findByUserDetails(userDetails);
-            Post post =  postService.findBySlug(slug);
-
-            postService.vote(post, user, voteType);
-
-            redirectAttributes.addFlashAttribute("successMessage", "Voted successfully");
-            return "redirect:/b/" + boardName + "/posts/" + post.getSlug();
+            User user = userService.findByUserDetails(userDetails);
+            Post post = postService.findBySlug(slug);
+            int newScore = postService.vote(post, user, voteType);
+            return ResponseEntity.ok(Map.of("voteScore", newScore));
         } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/b/" + boardName + "/posts/" + slug;
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
