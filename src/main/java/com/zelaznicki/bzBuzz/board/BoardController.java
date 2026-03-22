@@ -3,6 +3,8 @@ package com.zelaznicki.bzBuzz.board;
 import com.zelaznicki.bzBuzz.common.PostSort;
 import com.zelaznicki.bzBuzz.post.Post;
 import com.zelaznicki.bzBuzz.post.PostService;
+import com.zelaznicki.bzBuzz.post.PostVote;
+import com.zelaznicki.bzBuzz.post.PostVoteRepository;
 import com.zelaznicki.bzBuzz.user.User;
 import com.zelaznicki.bzBuzz.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,9 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
@@ -27,7 +32,6 @@ public class BoardController {
     private final BoardService boardService;
     private final UserService userService;
     private final PostService postService;
-
 
     @GetMapping("/")
     public String homepage(@AuthenticationPrincipal UserDetails userDetails, Model model) {
@@ -68,6 +72,13 @@ public class BoardController {
         List<Post> posts = postService.findByBoard(board, PostSort.TOP);
 
         model.addAttribute("posts", posts);
+
+        if (user != null) {
+            Map<UUID, Integer> voteMap = postService.findVotesByBoardAndUser(board, user);
+            model.addAttribute("userVotes", voteMap);
+        } else {
+            model.addAttribute("userVotes", Map.of());
+        }
 
 
         return "board/home";

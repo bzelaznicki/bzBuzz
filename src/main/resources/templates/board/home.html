@@ -66,11 +66,13 @@
 
                     <div class="post-vote" th:data-slug="${post.slug}" th:data-board="${board.name}">
                         <button class="btn-vote btn-vote-up"
+                                th:classappend="${userVotes != null and userVotes[post.id] == 1} ? ' active' : ''"
                                 th:data-slug="${post.slug}"
                                 th:data-board="${board.name}"
                                 onclick="castVote(this, 1)">▲</button>
                         <span class="post-score" th:text="${post.voteScore}"></span>
                         <button class="btn-vote btn-vote-down"
+                                th:classappend="${userVotes != null and userVotes[post.id] == -1} ? ' active' : ''"
                                 th:data-slug="${post.slug}"
                                 th:data-board="${board.name}"
                                 onclick="castVote(this, -1)">▼</button>

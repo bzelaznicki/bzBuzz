@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,4 +28,6 @@ public interface PostVoteRepository extends JpaRepository<PostVote, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT pv FROM PostVote pv WHERE pv.id = :id")
     Optional<PostVote> findByIdForUpdate(@Param("id") UUID id);
+
+    List<PostVote> findByUserAndPostIn(User user, List<Post> posts);
 }

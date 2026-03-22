@@ -9,8 +9,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -174,6 +176,18 @@ public class PostService {
 
         postRepository.adjustVoteScore(lockedPost.getId(), delta);
         return new VoteResponse(lockedPost.getVoteScore() + delta, action);
+    }
+
+    public Map<UUID, Integer> findVotesByBoardAndUser(Board board, User user) {
+        List<Post> posts =  postRepository.findAllByBoardAndStatusOrderByCreatedAtDesc(board, Status.ENABLED);
+        List<PostVote> userVotes = postVoteRepository.findByUserAndPostIn(user, posts);
+        return userVotes.stream()
+                .collect(Collectors.toMap(
+                        v -> v.getPost().getId(),
+                        PostVote::getVoteType
+                ));
+
+
     }
 
     @Transactional
