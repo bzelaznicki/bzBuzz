@@ -55,6 +55,7 @@
             <div th:if="${posts.empty}" class="empty-state">
                 <p>No posts yet.</p>
                 <a sec:authorize="isAuthenticated()"
+                   th:if="${isMember}"
                    th:href="@{/b/{name}/submit(name=${board.name})}"
                    class="btn btn-primary btn-sm">
                     Create the first post
