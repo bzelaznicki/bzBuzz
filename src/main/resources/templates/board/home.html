@@ -69,6 +69,8 @@
                                 th:classappend="${userVotes != null and userVotes[post.id] == 1} ? ' active' : ''"
                                 th:data-slug="${post.slug}"
                                 th:data-board="${board.name}"
+                                aria-label="Upvote"
+                                th:aria-pressed="${userVotes != null and userVotes[post.id] == 1}"
                                 onclick="castVote(this, 1)">▲
                         </button>
                         <button class="btn-vote btn-vote-up" sec:authorize="!isAuthenticated()" disabled
@@ -78,6 +80,8 @@
                                 th:classappend="${userVotes != null and userVotes[post.id] == -1} ? ' active' : ''"
                                 th:data-slug="${post.slug}"
                                 th:data-board="${board.name}"
+                                aria-label="Upvote"
+                                th:aria-pressed="${userVotes != null and userVotes[post.id] == -1}"
                                 onclick="castVote(this, -1)">▼
                         </button>
                         <button class="btn-vote btn-vote-down" sec:authorize="!isAuthenticated()" disabled

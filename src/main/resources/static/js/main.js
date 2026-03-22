@@ -39,10 +39,20 @@ async function castVote(button, voteType) {
             const downBtn = voteContainer.querySelector('.btn-vote-down');
 
             upBtn.classList.remove('active');
+            upBtn.setAttribute('aria-pressed', 'false');
             downBtn.classList.remove('active');
+            downBtn.setAttribute('aria-pressed', 'false');
 
-            if (data.action === 'upvoted') upBtn.classList.add('active');
-            if (data.action === 'downvoted') downBtn.classList.add('active');
+
+            if (data.action === 'upvoted') {
+                upBtn.classList.add('active');
+                upBtn.setAttribute('aria-pressed', 'true');
+            }
+            if (data.action === 'downvoted') {
+            downBtn.classList.add('active');
+            downBtn.setAttribute('aria-pressed', 'true');
+            }
+
         } else {
         console.error("Vote failed with status:", response.status);
         }
