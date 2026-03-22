@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${post.title} + ' — b/' + ${board.name}">Post</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <div class="post-view-container">
+
+        <div class="post-breadcrumb">
+            <a th:href="@{/b/{name}(name=${board.name})}"
+               th:text="'b/' + ${board.name}"
+               class="breadcrumb-link">
+            </a>
+            <span class="meta-divider">›</span>
+            <span class="breadcrumb-current" th:text="${post.title}"></span>
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success">
+            <p th:text="${successMessage}"></p>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error">
+            <p th:text="${errorMessage}"></p>
+        </div>
+
+        <div class="post-card post-card-full">
+
+            <div class="post-vote" th:data-slug="${post.slug}" th:data-board="${board.name}">
+                <button class="btn-vote btn-vote-up"
+                        th:classappend="${userVotes != null and userVotes[post.id] == 1} ? ' active' : ''"
+                        th:data-slug="${post.slug}"
+                        th:data-board="${board.name}"
+                        onclick="castVote(this, 1)">▲
+                </button>
+                <span class="post-score" th:text="${post.voteScore}"></span>
+                <button class="btn-vote btn-vote-down"
+                        th:classappend="${userVotes != null and userVotes[post.id] == -1} ? ' active' : ''"
+                        th:data-slug="${post.slug}"
+                        th:data-board="${board.name}"
+                        onclick="castVote(this, -1)">▼
+                </button>
+            </div>
+
+            <div class="post-body">
+
+                <div class="post-meta">
+                    <span class="post-type-badge"
+                          th:text="${post.postType}"
+                          th:classappend="${post.postType.name() == 'URL'} ? ' badge-url' : ' badge-text'">
+                    </span>
+                    <span class="post-author"
+                          th:text="${post.creator != null ? 'u/' + post.creator.username : '[deleted]'}">
+                    </span>
+                    <span class="meta-divider">·</span>
+                    <span class="post-date"
+                          th:text="${#temporals.format(post.createdAt, 'MMM d, yyyy')}">
+                    </span>
+                </div>
+
+                <h1 class="post-view-title" th:text="${post.title}"></h1>
+
+                <div class="post-content">
+                    <p th:if="${post.postType.name() == 'TEXT'}"
+                       th:text="${post.text}"
+                       class="post-text">
+                    </p>
+                    <a th:if="${post.postType.name() == 'URL'}"
+                       th:href="${post.url}"
+                       th:text="${post.url}"
+                       class="post-external-link"
+                       target="_blank"
+                       rel="noopener noreferrer">
+                    </a>
+                </div>
+
+                <div class="post-actions"
+                     th:if="${currentUser != null and post.creator != null and currentUser.id == post.creator.id}">
+                    <a th:href="@{/b/{name}/posts/{slug}/edit(name=${board.name},slug=${post.slug})}"
+                       class="btn btn-ghost btn-sm">
+                        Edit
+                    </a>
+                    <form th:action="@{/b/{name}/posts/{slug}/delete(name=${board.name},slug=${post.slug})}"
+                          method="post"
+                          onsubmit="return confirm('Are you sure you want to delete this post?')">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="comments-section">
+            <h2 class="comments-title">Comments</h2>
+            <div class="empty-state">
+                <p>No comments yet. Be the first!</p>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+</body>
+</html>

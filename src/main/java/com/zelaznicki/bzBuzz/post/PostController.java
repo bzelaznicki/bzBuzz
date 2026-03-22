@@ -16,6 +16,8 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @Controller
 @RequiredArgsConstructor
@@ -24,6 +26,7 @@ public class PostController {
     private final PostService postService;
     private final BoardService boardService;
     private final UserService userService;
+    private final PostVoteRepository postVoteRepository;
 
     private Board getBoardAndCheckAccess(String boardName, User user) {
         try {
@@ -44,6 +47,12 @@ public class PostController {
         Board board = getBoardAndCheckAccess(boardName, user);
         boolean isMember = user != null && boardService.isMember(board, user);
         Post post = postService.findBySlug(slug);
+
+        if (board.isPrivate() && !isMember) {
+            throw  new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
+        model.addAttribute("userVotes", postService.findVoteByPostAndUser(post, user));
         model.addAttribute("currentUser", user);
         model.addAttribute("board", board);
         model.addAttribute("post", post);

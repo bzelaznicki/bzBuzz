@@ -190,6 +190,19 @@ public class PostService {
 
     }
 
+    public Map<UUID, Integer> findVoteByPostAndUser(Post post, User user) {
+        Optional<PostVote> postVote = postVoteRepository.findByPostAndUser(post, user);
+
+        if (postVote.isPresent()) {
+            PostVote currentVote = postVote.get();
+            return Map.of(
+                    post.getId(), currentVote.getVoteType()
+            );
+        } else {
+            return Map.of();
+        }
+    }
+
     @Transactional
     public void deletePost(String slug, User user) {
         String normalizedSlug = getNormalizedSlug(slug);
