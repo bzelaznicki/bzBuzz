@@ -149,8 +149,8 @@ public class PostController {
         try {
             User user = userService.findByUserDetails(userDetails);
             Post post = postService.findBySlug(slug);
-            int newScore = postService.vote(post, user, voteType);
-            return ResponseEntity.ok(Map.of("voteScore", newScore));
+            VoteResponse result = postService.vote(post, user, voteType);
+            return ResponseEntity.ok(Map.of("voteScore", result.voteScore(), "action", result.action()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

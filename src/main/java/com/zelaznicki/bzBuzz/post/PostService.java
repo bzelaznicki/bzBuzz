@@ -133,7 +133,7 @@ public class PostService {
 
 
     @Transactional
-    public int vote(Post post, User user, int voteType) {
+    public VoteResponse vote(Post post, User user, int voteType) {
 
         Post lockedPost = postRepository.findByIdForUpdate(post.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));
@@ -143,23 +143,26 @@ public class PostService {
         }
 
         int delta = 0;
-
+        String action;
         Optional<PostVote> existing = postVoteRepository.findByPostAndUser(lockedPost, user);
         if (existing.isPresent()) {
             PostVote currentVote = existing.get();
 
             if (currentVote.getVoteType() == voteType) {
                 // un-vote
+                action = "unvoted";
                 postVoteRepository.delete(currentVote);
                 delta = -voteType;
             } else {
                 // switch vote
+                action = voteType == UPVOTE ? "upvoted" : "downvoted";
                 currentVote.setVoteType(voteType);
                 postVoteRepository.save(currentVote);
                 delta = voteType * 2;
             }
         } else {
             // new vote
+            action = voteType == UPVOTE ? "upvoted" : "downvoted";
             PostVote postVote = PostVote.builder()
                     .post(lockedPost)
                     .user(user)
@@ -170,7 +173,7 @@ public class PostService {
         }
 
         postRepository.adjustVoteScore(lockedPost.getId(), delta);
-        return lockedPost.getVoteScore() + delta;
+        return new VoteResponse(lockedPost.getVoteScore() + delta, action);
     }
 
     @Transactional

@@ -613,3 +613,12 @@ body {
     opacity: 0.4;
     cursor: not-allowed;
 }
+
+.btn-vote.active {
+    color: #ff4500;
+    font-weight: 700;
+}
+
+.btn-vote-down.active {
+    color: #7193ff;
+}
