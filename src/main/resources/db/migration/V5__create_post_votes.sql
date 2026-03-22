@@ -8,3 +8,4 @@ CREATE TABLE post_votes (
     CONSTRAINT chk_vote_type CHECK (vote_type IN (1, -1))
 );
 
+CREATE INDEX idx_post_votes_post_id ON post_votes(post_id);
