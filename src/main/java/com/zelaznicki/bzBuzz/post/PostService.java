@@ -52,6 +52,31 @@ public class PostService {
         return slug == null ? "" : slug.trim().toLowerCase();
     }
 
+    private void validatePostData(String title, String text, PostType postType, String url) {
+
+        if (postType == PostType.TEXT && text == null) {
+            throw new IllegalArgumentException("Text posts must have a body");
+        }
+        if (postType == PostType.URL && url == null) {
+            throw new IllegalArgumentException("URL posts must have a URL");
+        }
+
+        if (url != null && (url.startsWith("javascript:") || url.startsWith("data:"))) {
+            throw new IllegalArgumentException("Invalid URL");
+        }
+
+        if (text != null && url != null) {
+            throw new IllegalArgumentException("A post cannot have both text and a URL");
+        }
+        if (title.isEmpty()) {
+            throw new IllegalArgumentException("Title cannot be empty");
+        }
+        if (title.length() > 255) {
+            throw new IllegalArgumentException("Title cannot exceed 255 characters");
+        }
+
+    }
+
     /**
      * Create and persist a new post with normalized inputs, validated constraints, and a generated slug.
      *
@@ -74,27 +99,15 @@ public class PostService {
     public Post create(User user, Board board, String title, String text, PostType postType, String url) {
         String normalizedText = (text == null || text.isBlank()) ? null : text;
         String normalizedUrl = (url == null || url.isBlank()) ? null : url;
-
-        if (postType == PostType.TEXT && normalizedText == null) {
-            throw new IllegalArgumentException("Text posts must have a body");
-        }
-        if (postType == PostType.URL && normalizedUrl == null) {
-            throw new IllegalArgumentException("URL posts must have a URL");
-        }
-        if (normalizedText != null && normalizedUrl != null) {
-            throw new IllegalArgumentException("A post cannot have both text and a URL");
-        }
-
         String normalizedTitle = title == null ? "" : title.trim();
 
-        if (normalizedTitle.isEmpty()) {
-            throw new IllegalArgumentException("Title cannot be empty");
-        }
-        if (normalizedTitle.length() > 255) {
-            throw new IllegalArgumentException("Title cannot exceed 255 characters");
+        try {
+            validatePostData(normalizedTitle, normalizedText, postType, normalizedUrl);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(e.getMessage());
         }
 
-        String slug = generateSlug(title);
+        String slug = generateSlug(normalizedTitle);
 
         Post post = Post.builder()
                 .creator(user)
@@ -187,7 +200,7 @@ public class PostService {
      * @throws IllegalArgumentException if the normalized slug is empty, the post is not found, or the user is not authorized to update the post
      */
     @Transactional
-    public Post updatePost(String slug, User user, String title, String text, String url) {
+    public Post updatePost(String slug, User user, String title, String text, PostType postType, String url) {
         String normalizedSlug = getNormalizedSlug(slug);
 
         if (normalizedSlug.isEmpty()) {
@@ -200,17 +213,28 @@ public class PostService {
         }
 
         String normalizedTitle = title == null ? "" : title.trim();
+        String normalizedText = (text == null || text.isBlank()) ? null : text;
+        String normalizedUrl = (url == null || url.isBlank()) ? null : url;
+
 
         if (!normalizedTitle.isEmpty()) {
             post.setTitle(normalizedTitle);
         }
 
         if (text != null && !text.isBlank()) {
-            post.setText(text);
+            post.setText(normalizedText);
+        }
+        if (postType != null) {
+            post.setPostType(postType);
         }
 
         if (url != null && !url.isBlank()) {
-            post.setUrl(url);
+            post.setUrl(normalizedUrl);
+        }
+        try {
+            validatePostData(post.getTitle(), post.getText(), post.getPostType(), post.getUrl());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(e.getMessage());
         }
 
         return postRepository.save(post);

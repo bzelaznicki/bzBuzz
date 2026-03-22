@@ -281,6 +281,7 @@ public class PostController {
             @PathVariable String boardName,
             @RequestParam String title,
             @RequestParam(required = false) String text,
+            @RequestParam(required = false) PostType postType,
             @RequestParam(required = false) String url,
             @PathVariable String slug,
             RedirectAttributes redirectAttributes
@@ -296,7 +297,7 @@ public class PostController {
 
         try {
 
-            Post updatedPost = postService.updatePost(slug, user, title, text, url);
+            Post updatedPost = postService.updatePost(slug, user, title, text, postType, url);
             redirectAttributes.addFlashAttribute("successMessage", "Post updated");
             return "redirect:/b/" + board.getName() + "/posts/" + updatedPost.getSlug();
 
