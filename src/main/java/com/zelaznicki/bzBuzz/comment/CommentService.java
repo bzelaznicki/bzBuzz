@@ -69,7 +69,7 @@ public class CommentService {
 
 
         if (lockedComment.getStatus() == Status.DISABLED) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Comment is deleted");
+            throw new IllegalArgumentException("Comment is deleted");
         }
 
         int delta = 0;
