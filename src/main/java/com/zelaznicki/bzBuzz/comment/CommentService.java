@@ -28,9 +28,15 @@ public class CommentService {
     private static final int DOWNVOTE = -1;
 
     public Comment addComment(User user, Post post, Comment parent, String body) {
-
+            if (post.getStatus() == Status.DISABLED) {
+                throw new IllegalArgumentException("Cannot comment on a deleted post");
+            }
             if (body == null || body.isBlank()) {
                 throw new IllegalArgumentException("Comment body cannot be empty");
+            }
+
+            if (parent != null && parent.getStatus().equals(Status.DISABLED)) {
+                throw new IllegalArgumentException("Cannot reply to a deleted comment");
             }
 
             if (parent != null && (parent.getPost() == null || !parent.getPost().getId().equals(post.getId())))  {
@@ -129,6 +135,9 @@ public class CommentService {
     @Transactional
     public void deleteComment(User user, Comment comment) {
         Comment managedComment =  commentRepository.findByIdForUpdate(comment.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (managedComment.getStatus() == Status.DISABLED) {
+            throw new IllegalArgumentException("Comment is deleted");
+        }
         if (managedComment.getUser() == null || !managedComment.getUser().getId().equals(user.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not permitted to perform this action");
         }
