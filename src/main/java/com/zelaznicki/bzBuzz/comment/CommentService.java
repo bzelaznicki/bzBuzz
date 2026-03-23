@@ -68,6 +68,10 @@ public class CommentService {
                 .orElseThrow(() -> new IllegalArgumentException("Comment not found"));
 
 
+        if (lockedComment.getStatus() == Status.DISABLED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Comment is deleted");
+        }
+
         int delta = 0;
         String action;
         Optional<CommentVote> existing = commentVoteRepository.findByCommentAndUser(lockedComment, user);
