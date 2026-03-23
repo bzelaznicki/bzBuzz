@@ -22,6 +22,6 @@ public interface CommentVoteRepository extends JpaRepository<CommentVote, UUID> 
     @Transactional
     void deleteByCommentAndUser(Comment comment, User user);
 
-    @Query("SELECT cv FROM CommentVote cv WHERE cv.user = :user AND cv.comment.post = :post")
+    @Query("SELECT cv FROM CommentVote cv JOIN FETCH cv.comment WHERE cv.user = :user AND cv.comment.post = :post")
     List<CommentVote> findByUserAndPost(@Param("user") User user, @Param("post") Post post);
 }

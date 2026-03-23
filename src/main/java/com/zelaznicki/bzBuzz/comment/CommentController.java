@@ -70,6 +70,9 @@ public class CommentController {
             RedirectAttributes redirectAttributes
     ) {
         User user = userService.findByUserDetails(userDetails);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
         Board board = boardService.getBoardAndCheckAccess(boardName, user);
         Post post = postService.findByBoardAndSlug(board, slug);
         Comment parentComment = commentService.getComment(commentId);
@@ -136,7 +139,7 @@ public class CommentController {
         Comment comment = commentService.getComment(commentId);
 
         if (comment.getUser() == null || !comment.getUser().getId().equals(user.getId())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
         try {
@@ -167,8 +170,8 @@ public class CommentController {
 
         Post post = postService.findByBoardAndSlug(board, slug);
 
-        if (!post.getSlug().equals(slug)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        if (!comment.getPost().getId().equals(post.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Comment does not belong to this post");
         }
 
         try {
