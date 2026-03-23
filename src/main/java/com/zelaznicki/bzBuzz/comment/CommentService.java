@@ -27,7 +27,14 @@ public class CommentService {
     private static final int UPVOTE = 1;
     private static final int DOWNVOTE = -1;
 
+    private static void requireAuthenticated(User user) {
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+        }
+    }
+
     public Comment addComment(User user, Post post, Comment parent, String body) {
+            requireAuthenticated(user);
             if (post.getStatus() == Status.DISABLED) {
                 throw new IllegalArgumentException("Cannot comment on a deleted post");
             }
@@ -35,7 +42,7 @@ public class CommentService {
                 throw new IllegalArgumentException("Comment body cannot be empty");
             }
 
-            if (parent != null && parent.getStatus().equals(Status.DISABLED)) {
+            if (parent != null && parent.getStatus()== Status.DISABLED) {
                 throw new IllegalArgumentException("Cannot reply to a deleted comment");
             }
 
@@ -68,7 +75,7 @@ public class CommentService {
 
     @Transactional
     public VoteResponse vote(Comment comment, User user, int voteType) {
-
+        requireAuthenticated(user);
         if (voteType != UPVOTE && voteType != DOWNVOTE) {
             throw new IllegalArgumentException("Invalid vote");
         }
@@ -115,6 +122,7 @@ public class CommentService {
 
     @Transactional
     public Comment updateComment(User user, Comment comment, String body) {
+        requireAuthenticated(user);
         Comment managedComment = commentRepository.findByIdForUpdate(comment.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (body == null || body.isBlank()) {
             throw new IllegalArgumentException("Comment body cannot be empty");
@@ -134,6 +142,7 @@ public class CommentService {
 
     @Transactional
     public void deleteComment(User user, Comment comment) {
+        requireAuthenticated(user);
         Comment managedComment =  commentRepository.findByIdForUpdate(comment.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (managedComment.getStatus() == Status.DISABLED) {
             throw new IllegalArgumentException("Comment is deleted");
