@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<div th:fragment="commentList(comments, board, post, currentUser, commentVotes, childComments)">
+    <div th:if="${comments.empty}" class="empty-state">
+        <p>No comments yet. Be the first!</p>
+    </div>
+    <div th:unless="${comments.empty}" class="comment-list">
+        <div th:each="comment : ${comments}">
+            <div th:insert="~{fragments/comment :: commentCard(${comment}, ${board}, ${post}, ${currentUser}, ${commentVotes}, ${childComments})}"></div>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="commentCard(comment, board, post, currentUser, commentVotes, childComments)" class="comment-card">
+
+    <div class="comment-vote">
+        <button class="btn-vote btn-vote-up"
+                sec:authorize="isAuthenticated()"
+                th:classappend="${commentVotes != null and commentVotes[comment.id] == 1} ? ' active' : ''"
+                th:data-comment-id="${comment.id}"
+                th:data-board="${board.name}"
+                th:data-slug="${post.slug}"
+                th:aria-pressed="${commentVotes != null and commentVotes[comment.id] == 1}"
+                onclick="castCommentVote(this, 1)">▲
+        </button>
+        <button class="btn-vote btn-vote-up"
+                sec:authorize="!isAuthenticated()"
+                disabled title="Log in to vote">▲
+        </button>
+        <span class="post-score" th:text="${comment.voteScore}"></span>
+        <button class="btn-vote btn-vote-down"
+                sec:authorize="isAuthenticated()"
+                th:classappend="${commentVotes != null and commentVotes[comment.id] == -1} ? ' active' : ''"
+                th:data-comment-id="${comment.id}"
+                th:data-board="${board.name}"
+                th:data-slug="${post.slug}"
+                th:aria-pressed="${commentVotes != null and commentVotes[comment.id] == -1}"
+                onclick="castCommentVote(this, -1)">▼
+        </button>
+        <button class="btn-vote btn-vote-down"
+                sec:authorize="!isAuthenticated()"
+                disabled title="Log in to vote">▼
+        </button>
+    </div>
+
+    <div class="comment-body">
+
+        <div class="comment-meta">
+            <span class="comment-author"
+                  th:text="${comment.user != null ? 'u/' + comment.user.username : '[deleted]'}">
+            </span>
+            <span class="meta-divider">·</span>
+            <span class="comment-date"
+                  th:text="${#temporals.format(comment.createdAt, 'MMM d, yyyy')}">
+            </span>
+        </div>
+
+        <p class="comment-text"
+           th:if="${comment.status.name() == 'ENABLED'}"
+           th:text="${comment.body}">
+        </p>
+        <p class="comment-text comment-deleted"
+           th:if="${comment.status.name() == 'DISABLED'}">
+            [deleted]
+        </p>
+
+        <div class="comment-actions"
+             th:if="${comment.status.name() == 'ENABLED'}">
+
+            <div th:if="${currentUser != null and comment.user != null and currentUser.id == comment.user.id}"
+                 class="comment-owner-actions">
+                <form th:action="@{/b/{name}/posts/{slug}/comments/{id}/edit(name=${board.name},slug=${post.slug},id=${comment.id})}"
+                      method="post"
+                      class="comment-edit-form"
+                      style="display:none">
+                    <textarea name="body" th:text="${comment.body}" rows="3" required></textarea>
+                    <div class="comment-form-actions">
+                        <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit(this)">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                    </div>
+                </form>
+                <button class="btn btn-ghost btn-sm"
+                        onclick="toggleEdit(this)">Edit
+                </button>
+                <form th:action="@{/b/{name}/posts/{slug}/comments/{id}/delete(name=${board.name},slug=${post.slug},id=${comment.id})}"
+                      method="post"
+                      style="display:inline"
+                      onsubmit="return confirm('Delete this comment?')">
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+            </div>
+
+            <div class="comment-reply-section" sec:authorize="isAuthenticated()">
+                <button class="btn btn-ghost btn-sm"
+                        onclick="toggleReply(this)">Reply
+                </button>
+                <form th:action="@{/b/{name}/posts/{slug}/comments/{id}/reply(name=${board.name},slug=${post.slug},id=${comment.id})}"
+                      method="post"
+                      class="comment-reply-form"
+                      style="display:none">
+                    <textarea name="body" placeholder="Write a reply..." rows="3" required></textarea>
+                    <div class="comment-form-actions">
+                        <button type="button" class="btn btn-ghost btn-sm" onclick="toggleReply(this)">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Reply</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+
+        <div class="comment-replies"
+             th:if="${childComments[comment.id] != null and !childComments[comment.id].empty}">
+            <div th:each="reply : ${childComments[comment.id]}">
+                <div th:insert="~{fragments/comment :: commentCard(${reply}, ${board}, ${post}, ${currentUser}, ${commentVotes}, ${childComments})}"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

@@ -2,6 +2,9 @@ package com.zelaznicki.bzBuzz.post;
 
 import com.zelaznicki.bzBuzz.board.Board;
 import com.zelaznicki.bzBuzz.board.BoardService;
+import com.zelaznicki.bzBuzz.comment.Comment;
+import com.zelaznicki.bzBuzz.comment.CommentService;
+import com.zelaznicki.bzBuzz.common.PostSort;
 import com.zelaznicki.bzBuzz.user.User;
 import com.zelaznicki.bzBuzz.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +18,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
@@ -26,28 +31,7 @@ public class PostController {
     private final PostService postService;
     private final BoardService boardService;
     private final UserService userService;
-    private final PostVoteRepository postVoteRepository;
-
-    /**
-     * Load a Board by name and enforce access rules for private boards.
-     *
-     * @param boardName the board's unique name
-     * @param user the current authenticated user, or null for anonymous access
-     * @return the resolved Board when found and accessible to the caller
-     * @throws ResponseStatusException with status 404 if the board name is unknown, or 403 if the board is private and the user is not a member
-     */
-    private Board getBoardAndCheckAccess(String boardName, User user) {
-        try {
-            Board board = boardService.findByName(boardName);
-            boolean isMember = user != null && boardService.isMember(board, user);
-            if (board.isPrivate() && !isMember) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-            }
-            return board;
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
-    }
+    private final CommentService commentService;
 
     /**
      * Resolves the board that the post is in
@@ -57,7 +41,7 @@ public class PostController {
      * @return the post if it's validated
      */
     private Post getPostAndCheckAccess(String boardName, String slug, User user) {
-        Board board = getBoardAndCheckAccess(boardName, user);
+        Board board = boardService.getBoardAndCheckAccess(boardName, user);
         return postService.findByBoardAndSlug(board, slug);
     }
 
@@ -76,18 +60,25 @@ public class PostController {
     @GetMapping("/b/{boardName}/posts/{slug}")
     public String postPage(@AuthenticationPrincipal UserDetails userDetails, @PathVariable String boardName, @PathVariable String slug, Model model) {
         User user = userService.findByUserDetails(userDetails);
-        Board board = getBoardAndCheckAccess(boardName, user);
+        Board board = boardService.getBoardAndCheckAccess(boardName, user);
         boolean isMember = user != null && boardService.isMember(board, user);
         Post post = getPostAndCheckAccess(boardName, slug, user);
+        Map<UUID, Integer> commentVotes = user != null ? commentService.findVotesByPostAndUser(post,user) : Map.of();
 
-        if (board.isPrivate() && !isMember) {
-            throw  new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+        List<Comment> comments = commentService.findParentCommentsByPost(post, PostSort.TOP);
+        List<Comment> allReplies = commentService.findAllRepliesByPost(post);
+
+        Map<UUID, List<Comment>> commentMap = allReplies.stream()
+                        .collect(Collectors.groupingBy(c -> c.getParent().getId()));
+
 
         model.addAttribute("userVotes", postService.findVoteByPostAndUser(post, user));
         model.addAttribute("currentUser", user);
         model.addAttribute("board", board);
         model.addAttribute("post", post);
+        model.addAttribute("comments", comments);
+        model.addAttribute("childComments", commentMap);
+        model.addAttribute("commentVotes", commentVotes);
         model.addAttribute("isMember", isMember);
         return "post/view";
     }
@@ -107,7 +98,7 @@ public class PostController {
             Model model
     ) {
         User user = userService.findByUserDetails(userDetails);
-        Board board = getBoardAndCheckAccess(boardName, user);
+        Board board = boardService.getBoardAndCheckAccess(boardName, user);
         boolean isMember = user != null && boardService.isMember(board, user);
         model.addAttribute("currentUser", user);
         model.addAttribute("board", board);
@@ -135,7 +126,7 @@ public class PostController {
             Model model
     ) {
         User user = userService.findByUserDetails(userDetails);
-        Board board = getBoardAndCheckAccess(boardName, user);
+        Board board = boardService.getBoardAndCheckAccess(boardName, user);
         boolean isMember = user != null && boardService.isMember(board, user);
         Post post = getPostAndCheckAccess(board.getName(), slug, user);
         model.addAttribute("currentUser", user);
@@ -184,7 +175,7 @@ public class PostController {
             Post post = postService.create(user, board, title, text, postType, url);
 
             redirectAttributes.addFlashAttribute("successMessage", "Post created");
-            return "redirect:/b/" + boardName + "/posts/" + post.getSlug();
+            return "redirect:/b/" + board.getName() + "/posts/" + post.getSlug();
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/b/" + boardName;
@@ -208,7 +199,7 @@ public class PostController {
             RedirectAttributes redirectAttributes
     ) {
         User user = userService.findByUserDetails(userDetails);
-        Board board = getBoardAndCheckAccess(boardName, user);
+        Board board = boardService.getBoardAndCheckAccess(boardName, user);
         Post post = getPostAndCheckAccess(boardName, slug, user);
         if (!post.getCreator().equals(user)) {
             redirectAttributes.addFlashAttribute("errorMessage", "You are not the owner of the post");
@@ -247,7 +238,7 @@ public class PostController {
             @RequestParam int voteType
     ) {
         User user = userService.findByUserDetails(userDetails);
-        Board board = getBoardAndCheckAccess(boardName, user);
+        Board board = boardService.getBoardAndCheckAccess(boardName, user);
         Post post = getPostAndCheckAccess(boardName, slug, user);
 
         boolean isMember = user != null && boardService.isMember(board, user);
@@ -287,7 +278,7 @@ public class PostController {
             RedirectAttributes redirectAttributes
     ) {
         User user = userService.findByUserDetails(userDetails);
-        Board board = getBoardAndCheckAccess(boardName, user);
+        Board board = boardService.getBoardAndCheckAccess(boardName, user);
         Post post = getPostAndCheckAccess(boardName, slug, user);
 
         if  (!post.getCreator().equals(user)) {

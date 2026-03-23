@@ -261,6 +261,9 @@ public class PostService {
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));
 
 
+        if (lockedPost.getStatus() == Status.DISABLED) {
+            throw new IllegalArgumentException("Post is deleted");
+        }
         int delta = 0;
         String action;
         Optional<PostVote> existing = postVoteRepository.findByPostAndUser(lockedPost, user);
