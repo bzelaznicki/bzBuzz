@@ -1,6 +1,5 @@
 package com.zelaznicki.bzBuzz.comment;
 
-import com.zelaznicki.bzBuzz.post.Post;
 import com.zelaznicki.bzBuzz.user.User;
 import jakarta.persistence.*;
 import lombok.*;

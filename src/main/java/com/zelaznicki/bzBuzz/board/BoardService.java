@@ -1,6 +1,5 @@
 package com.zelaznicki.bzBuzz.board;
 
-import com.zelaznicki.bzBuzz.post.PostController;
 import com.zelaznicki.bzBuzz.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
