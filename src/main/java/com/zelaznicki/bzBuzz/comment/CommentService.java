@@ -107,29 +107,34 @@ public class CommentService {
         return new VoteResponse(expectedScore, action);
     }
 
+    @Transactional
     public Comment updateComment(User user, Comment comment, String body) {
+        Comment managedComment = commentRepository.findByIdForUpdate(comment.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (body == null || body.isBlank()) {
             throw new IllegalArgumentException("Comment body cannot be empty");
         }
 
-        if (comment.getStatus() == Status.DISABLED) {
+        if (managedComment.getStatus() == Status.DISABLED) {
             throw new IllegalArgumentException("Comment is deleted");
         }
 
-        if (comment.getUser() == null || !comment.getUser().getId().equals(user.getId())) {
+        if (managedComment.getUser() == null || !managedComment.getUser().getId().equals(user.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to perform this action");
         }
 
-        comment.setBody(body);
-        return commentRepository.save(comment);
+        managedComment.setBody(body);
+        return commentRepository.save(managedComment);
     }
+
+    @Transactional
     public void deleteComment(User user, Comment comment) {
-        if (comment.getUser() == null || !comment.getUser().getId().equals(user.getId())) {
+        Comment managedComment =  commentRepository.findByIdForUpdate(comment.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (managedComment.getUser() == null || !managedComment.getUser().getId().equals(user.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not permitted to perform this action");
         }
-        comment.setStatus(Status.DISABLED);
-        comment.setBody("[deleted]");
-        commentRepository.save(comment);
+        managedComment.setStatus(Status.DISABLED);
+        managedComment.setBody("[deleted]");
+        commentRepository.save(managedComment);
     }
 
     public Map<UUID, Integer> findVotesByPostAndUser(Post post, User user) {
