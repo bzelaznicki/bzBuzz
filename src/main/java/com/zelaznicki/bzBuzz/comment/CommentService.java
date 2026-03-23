@@ -138,6 +138,9 @@ public class CommentService {
     }
 
     public Map<UUID, Integer> findVotesByPostAndUser(Post post, User user) {
+        if (user == null) {
+            return Map.of();
+        }
         return commentVoteRepository.findByUserAndPost(user, post)
                 .stream()
                 .collect(Collectors.toMap(
