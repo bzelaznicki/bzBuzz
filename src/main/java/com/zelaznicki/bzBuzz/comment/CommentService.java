@@ -33,6 +33,9 @@ public class CommentService {
                 throw new IllegalArgumentException("Comment body cannot be empty");
             }
 
+            if (parent != null && (parent.getPost() == null || !parent.getPost().getId().equals(post.getId())))  {
+                throw new IllegalArgumentException("Reply parent must belong to the same post");
+            }
             Comment comment = Comment.builder()
                     .user(user)
                     .post(post)
@@ -107,6 +110,10 @@ public class CommentService {
     public Comment updateComment(User user, Comment comment, String body) {
         if (body == null || body.isBlank()) {
             throw new IllegalArgumentException("Comment body cannot be empty");
+        }
+
+        if (comment.getStatus() == Status.DISABLED) {
+            throw new IllegalArgumentException("Comment is deleted");
         }
 
         if (comment.getUser() == null || !comment.getUser().getId().equals(user.getId())) {
