@@ -41,6 +41,9 @@ public class CommentController {
             RedirectAttributes redirectAttributes
     ) {
         User user = userService.findByUserDetails(userDetails);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
         Board board = boardService.getBoardAndCheckAccess(boardName, user);
 
         Post post = postService.findByBoardAndSlug(board, slug);
@@ -71,6 +74,9 @@ public class CommentController {
         Post post = postService.findByBoardAndSlug(board, slug);
         Comment parentComment = commentService.getComment(commentId);
 
+        if (!parentComment.getPost().getId().equals(post.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Parent comment does not belong to this post");
+        }
 
         try {
             commentService.addComment(user, post, parentComment, body);
@@ -123,11 +129,14 @@ public class CommentController {
             RedirectAttributes redirectAttributes
     ){
         User user = userService.findByUserDetails(userDetails);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
         Board board = boardService.getBoardAndCheckAccess(boardName, user);
         Comment comment = commentService.getComment(commentId);
 
-        if (user == null || comment.getUser() == null || !comment.getUser().getId().equals(user.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        if (comment.getUser() == null || !comment.getUser().getId().equals(user.getId())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
 
         try {
@@ -150,8 +159,17 @@ public class CommentController {
             @RequestParam int voteType
     ) {
         User user = userService.findByUserDetails(userDetails);
-        boardService.getBoardAndCheckAccess(boardName, user);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+        Board board = boardService.getBoardAndCheckAccess(boardName, user);
         Comment comment = commentService.getComment(commentId);
+
+        Post post = postService.findByBoardAndSlug(board, slug);
+
+        if (!post.getSlug().equals(slug)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
 
         try {
             VoteResponse result = commentService.vote(comment, user, voteType);
