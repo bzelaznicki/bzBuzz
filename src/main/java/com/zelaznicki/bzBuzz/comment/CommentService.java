@@ -124,9 +124,6 @@ public class CommentService {
     public Comment updateComment(User user, Comment comment, String body) {
         requireAuthenticated(user);
         Comment managedComment = commentRepository.findByIdForUpdate(comment.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (body == null || body.isBlank()) {
-            throw new IllegalArgumentException("Comment body cannot be empty");
-        }
 
         if (managedComment.getStatus() == Status.DISABLED) {
             throw new IllegalArgumentException("Comment is deleted");
@@ -135,6 +132,11 @@ public class CommentService {
         if (managedComment.getUser() == null || !managedComment.getUser().getId().equals(user.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to perform this action");
         }
+
+        if (body == null || body.isBlank()) {
+            throw new IllegalArgumentException("Comment body cannot be empty");
+        }
+
 
         managedComment.setBody(body);
         return commentRepository.save(managedComment);
