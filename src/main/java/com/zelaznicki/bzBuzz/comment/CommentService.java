@@ -91,12 +91,13 @@ public class CommentService {
                     .user(user)
                     .voteType(voteType)
                     .build();
-            commentVoteRepository.save(commentVote);
+            commentVoteRepository.saveAndFlush(commentVote);
             delta = voteType;
         }
 
+        int expectedScore = lockedComment.getVoteScore() + delta;
         commentRepository.adjustVoteScore(lockedComment.getId(), delta);
-        return new VoteResponse(lockedComment.getVoteScore() + delta, action);
+        return new VoteResponse(expectedScore, action);
     }
 
     public Comment updateComment(User user, Comment comment, String body) {
