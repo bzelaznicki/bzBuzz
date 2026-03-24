@@ -853,3 +853,27 @@ body {
 .add-comment-form textarea:focus {
     border-color: #0079d3;
 }
+
+.error-container {
+    text-align: center;
+    padding: 4rem 1rem;
+}
+
+.error-code {
+    font-size: 5rem;
+    font-weight: 700;
+    color: #edeff1;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.error-title {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+}
+
+.error-message {
+    color: #878a8c;
+    margin-bottom: 1.5rem;
+}
