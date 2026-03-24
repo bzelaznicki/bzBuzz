@@ -3,12 +3,11 @@ package com.zelaznicki.bzBuzz.board;
 import com.zelaznicki.bzBuzz.common.PostSort;
 import com.zelaznicki.bzBuzz.post.Post;
 import com.zelaznicki.bzBuzz.post.PostService;
-import com.zelaznicki.bzBuzz.post.PostVote;
-import com.zelaznicki.bzBuzz.post.PostVoteRepository;
 import com.zelaznicki.bzBuzz.user.User;
 import com.zelaznicki.bzBuzz.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -202,7 +201,7 @@ public class BoardController {
             boardService.removeMemberFromBoard(board, user);
 
             redirectAttributes.addFlashAttribute("successMessage", "Left board");
-        } catch  (IllegalArgumentException e) {
+        } catch  (IllegalArgumentException | AccessDeniedException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/b/" + name;
