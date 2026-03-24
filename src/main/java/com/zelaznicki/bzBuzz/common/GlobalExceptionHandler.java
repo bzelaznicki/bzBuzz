@@ -26,14 +26,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public String handleNotFound(IllegalArgumentException e, Model model) {
+    public String handleNotFound(ResourceNotFoundException e, Model model) {
         model.addAttribute("message", e.getMessage());
         return "error/404";
     }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public String handleInternalServerError(IllegalArgumentException e, Model model) {
+    public String handleInternalServerError(Exception e, Model model) {
         model.addAttribute("message", e.getMessage());
         return "error/500";
     }
