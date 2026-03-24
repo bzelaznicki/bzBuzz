@@ -2,6 +2,7 @@ package com.zelaznicki.bzBuzz.post;
 
 import com.zelaznicki.bzBuzz.board.Board;
 import com.zelaznicki.bzBuzz.common.PostSort;
+import com.zelaznicki.bzBuzz.common.ResourceNotFoundException;
 import com.zelaznicki.bzBuzz.common.Status;
 import com.zelaznicki.bzBuzz.user.User;
 import lombok.RequiredArgsConstructor;
@@ -353,7 +354,7 @@ public class PostService {
             throw new IllegalArgumentException("Slug cannot be empty");
         }
 
-        Post post = postRepository.findBySlugAndStatus(normalizedSlug, Status.ENABLED).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        Post post = postRepository.findBySlugAndStatus(normalizedSlug, Status.ENABLED).orElseThrow(() -> new ResourceNotFoundException("Post not found"));
 
         if (post.getCreator() == null || !post.getCreator().getId().equals(user.getId())) {
             throw new IllegalArgumentException("You are not authorized to perform this action");

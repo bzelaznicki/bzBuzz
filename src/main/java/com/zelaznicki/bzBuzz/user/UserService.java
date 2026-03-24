@@ -1,5 +1,6 @@
 package com.zelaznicki.bzBuzz.user;
 
+import com.zelaznicki.bzBuzz.common.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -56,16 +57,16 @@ public class UserService {
      *
      * @param email the email address used to locate the user
      * @return the User with the specified email
-     * @throws IllegalArgumentException if no user with the given email exists
+     * @throws ResourceNotFoundException if no user with the given email exists
      */
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     public User findByUsername(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new  IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 }
 
