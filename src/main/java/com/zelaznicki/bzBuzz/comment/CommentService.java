@@ -170,7 +170,7 @@ public class CommentService {
                 ));
     }
 
-    Comment getComment(UUID commentId) {
+    public Comment getComment(UUID commentId) {
 
         return commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
