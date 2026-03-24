@@ -15,4 +15,11 @@ public class GlobalExceptionHandler {
         model.addAttribute("message", e.getMessage());
         return "error/404";
     }
+
+    @ExceptionHandler(InternalError.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public String handleInternalServerError(IllegalArgumentException e, Model model) {
+        model.addAttribute("message", e.getMessage());
+        return "error/500";
+    }
 }

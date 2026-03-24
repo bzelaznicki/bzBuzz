@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Something went wrong</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="error-container">
+        <h1 class="error-code">500</h1>
+        <h2 class="error-title">Something went wrong</h2>
+        <p class="error-message" th:text="${message} ?: 'There was an issue processing your request.'"></p>
+        <a th:href="@{/}" class="btn btn-primary btn-sm">Go home</a>
+    </div>
+</div>
+</body>
+</html>
