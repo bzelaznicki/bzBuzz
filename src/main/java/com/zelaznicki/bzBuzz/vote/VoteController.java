@@ -43,7 +43,6 @@ public class VoteController {
      *         on invalid input returns a JSON object with key `error` and a 400 Bad Request status
      */
     @PostMapping("/api/b/{boardName}/posts/{slug}/vote")
-    @ResponseBody
     public ResponseEntity<?> voteApi(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable String boardName,
@@ -56,13 +55,12 @@ public class VoteController {
         }
         Board board = boardService.getBoardAndCheckAccess(boardName, user);
         Post post = postService.getPostAndCheckAccess(boardName, slug, user);
-            VoteResponse result = postService.vote(post, user, voteType);
-            return ResponseEntity.ok(Map.of("voteScore", result.voteScore(), "action", result.action()));
+        VoteResponse result = postService.vote(post, user, voteType);
+        return ResponseEntity.ok(Map.of("voteScore", result.voteScore(), "action", result.action()));
 
     }
 
     @PostMapping("/api/b/{boardName}/posts/{slug}/comments/{commentId}/vote")
-    @ResponseBody
     public ResponseEntity<?> voteComment(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable String boardName,
@@ -72,7 +70,7 @@ public class VoteController {
     ) {
         User user = userService.findByUserDetails(userDetails);
         if (user == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
         }
         Board board = boardService.getBoardAndCheckAccess(boardName, user);
         Comment comment = commentService.getComment(commentId);
