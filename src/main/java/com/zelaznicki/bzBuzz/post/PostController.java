@@ -33,17 +33,7 @@ public class PostController {
     private final UserService userService;
     private final CommentService commentService;
 
-    /**
-     * Resolves the board that the post is in
-     * @param boardName board's unique name
-     * @param slug post slug
-     * @param user the current authenticated user, or null for anonymous access
-     * @return the post if it's validated
-     */
-    private Post getPostAndCheckAccess(String boardName, String slug, User user) {
-        Board board = boardService.getBoardAndCheckAccess(boardName, user);
-        return postService.findByBoardAndSlug(board, slug);
-    }
+
 
     /**
      * Render the post view page for a post identified by `slug` within the specified board and populate the model.
@@ -62,7 +52,7 @@ public class PostController {
         User user = userService.findByUserDetails(userDetails);
         Board board = boardService.getBoardAndCheckAccess(boardName, user);
         boolean isMember = user != null && boardService.isMember(board, user);
-        Post post = getPostAndCheckAccess(boardName, slug, user);
+        Post post = postService.getPostAndCheckAccess(boardName, slug, user);
         Map<UUID, Integer> commentVotes = user != null ? commentService.findVotesByPostAndUser(post,user) : Map.of();
 
         List<Comment> comments = commentService.findParentCommentsByPost(post, PostSort.TOP);
@@ -128,7 +118,7 @@ public class PostController {
         User user = userService.findByUserDetails(userDetails);
         Board board = boardService.getBoardAndCheckAccess(boardName, user);
         boolean isMember = user != null && boardService.isMember(board, user);
-        Post post = getPostAndCheckAccess(board.getName(), slug, user);
+        Post post = postService.getPostAndCheckAccess(board.getName(), slug, user);
         model.addAttribute("currentUser", user);
         model.addAttribute("board", board);
         model.addAttribute("post", post);
@@ -200,7 +190,7 @@ public class PostController {
     ) {
         User user = userService.findByUserDetails(userDetails);
         Board board = boardService.getBoardAndCheckAccess(boardName, user);
-        Post post = getPostAndCheckAccess(boardName, slug, user);
+        Post post = postService.getPostAndCheckAccess(boardName, slug, user);
         if (!post.getCreator().equals(user)) {
             redirectAttributes.addFlashAttribute("errorMessage", "You are not the owner of the post");
             return "redirect:/b/" + boardName + "/posts/" + post.getSlug();
@@ -216,43 +206,7 @@ public class PostController {
         }
     }
 
-    /**
-     * Apply a vote by the authenticated user to the specified post and return the result as JSON.
-     *
-     * Resolves the authenticated principal into the application user, loads the post by slug,
-     * performs the vote operation, and responds with the updated vote score and the action taken.
-     *
-     * @param userDetails the Spring Security principal for the currently authenticated user
-     * @param boardName the board's name from the request path
-     * @param slug the post's slug from the request path
-     * @param voteType an integer representing the vote action
-     * @return a JSON object with keys `voteScore` (the updated score) and `action` (the performed action) on success;
-     *         on invalid input returns a JSON object with key `error` and a 400 Bad Request status
-     */
-    @PostMapping("/api/b/{boardName}/posts/{slug}/vote")
-    @ResponseBody
-    public ResponseEntity<?> voteApi(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String boardName,
-            @PathVariable String slug,
-            @RequestParam int voteType
-    ) {
-        User user = userService.findByUserDetails(userDetails);
-        Board board = boardService.getBoardAndCheckAccess(boardName, user);
-        Post post = getPostAndCheckAccess(boardName, slug, user);
 
-        boolean isMember = user != null && boardService.isMember(board, user);
-
-        if (board.isPrivate() && !isMember) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this board");
-        }
-        try {
-            VoteResponse result = postService.vote(post, user, voteType);
-            return ResponseEntity.ok(Map.of("voteScore", result.voteScore(), "action", result.action()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
-    }
 
     /**
      * Handle form submission to update an existing post and redirect to the appropriate page.
@@ -279,7 +233,7 @@ public class PostController {
     ) {
         User user = userService.findByUserDetails(userDetails);
         Board board = boardService.getBoardAndCheckAccess(boardName, user);
-        Post post = getPostAndCheckAccess(boardName, slug, user);
+        Post post = postService.getPostAndCheckAccess(boardName, slug, user);
 
         if  (!post.getCreator().equals(user)) {
             redirectAttributes.addFlashAttribute("errorMessage", "You are not the owner of the post");

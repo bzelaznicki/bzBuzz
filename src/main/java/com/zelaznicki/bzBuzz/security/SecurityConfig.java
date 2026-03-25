@@ -63,6 +63,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/b/create").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/b/**").permitAll()
                                 .requestMatchers(HttpMethod.POST,"/b/**").authenticated()
+                                .requestMatchers("/error/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

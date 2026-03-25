@@ -1,6 +1,7 @@
 package com.zelaznicki.bzBuzz.comment;
 
 import com.zelaznicki.bzBuzz.common.PostSort;
+import com.zelaznicki.bzBuzz.common.ResourceNotFoundException;
 import com.zelaznicki.bzBuzz.common.Status;
 import com.zelaznicki.bzBuzz.post.Post;
 import com.zelaznicki.bzBuzz.post.VoteResponse;
@@ -81,7 +82,7 @@ public class CommentService {
         }
 
         Comment lockedComment = commentRepository.findByIdForUpdate(comment.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Comment not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
 
 
         if (lockedComment.getStatus() == Status.DISABLED) {
@@ -169,10 +170,10 @@ public class CommentService {
                 ));
     }
 
-    Comment getComment(UUID commentId) {
+    public Comment getComment(UUID commentId) {
 
         return commentRepository.findById(commentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
     }
 
     public List<Comment> findAllRepliesByPost(Post post) {

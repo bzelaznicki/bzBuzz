@@ -3,12 +3,11 @@ package com.zelaznicki.bzBuzz.board;
 import com.zelaznicki.bzBuzz.common.PostSort;
 import com.zelaznicki.bzBuzz.post.Post;
 import com.zelaznicki.bzBuzz.post.PostService;
-import com.zelaznicki.bzBuzz.post.PostVote;
-import com.zelaznicki.bzBuzz.post.PostVoteRepository;
 import com.zelaznicki.bzBuzz.user.User;
 import com.zelaznicki.bzBuzz.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -195,17 +194,22 @@ public class BoardController {
             @PathVariable String name,
             RedirectAttributes redirectAttributes
     ) {
-
+        Board board = null;
         try {
             User user = userService.findByUserDetails(userDetails);
-            Board board = boardService.findByName(name);
+            board = boardService.findByName(name);
             boardService.removeMemberFromBoard(board, user);
 
             redirectAttributes.addFlashAttribute("successMessage", "Left board");
-        } catch  (IllegalArgumentException e) {
+            return board.isPrivate() ? "redirect:/" : "redirect:/b/" + name;
+        } catch  (AccessDeniedException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return board != null && board.isPrivate() ? "redirect:/" : "redirect:/b/" + name;
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/b/" + name;
         }
-        return "redirect:/b/" + name;
+
 
     }
 

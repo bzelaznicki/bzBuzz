@@ -1,8 +1,10 @@
 package com.zelaznicki.bzBuzz.board;
 
+import com.zelaznicki.bzBuzz.common.ResourceNotFoundException;
 import com.zelaznicki.bzBuzz.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -62,7 +64,7 @@ public class BoardService {
             throw new IllegalArgumentException("Invalid board name");
         }
         return boardRepository.findByName(normalizedName)
-                .orElseThrow(() -> new IllegalArgumentException("Board not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Board not found"));
     }
 
     public List<Board> findPublicBoards() {
@@ -101,10 +103,10 @@ public class BoardService {
     @Transactional
     public BoardMember changeMemberRole(Board board, User user, MembershipRole role) {
         Board lockedBoard = boardRepository.findByIdForUpdate(board.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Board not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Board not found"));
 
         BoardMember member = boardMemberRepository.findByBoardAndUserForUpdate(lockedBoard, user)
-                .orElseThrow(() -> new IllegalArgumentException("User is not a member of this board"));
+                .orElseThrow(() -> new AccessDeniedException("User is not a member of this board"));
 
         if (role == MembershipRole.MEMBER) {
             long moderatorCount = boardMemberRepository.countByBoardAndRole(lockedBoard, MembershipRole.MODERATOR);
@@ -119,10 +121,10 @@ public class BoardService {
     @Transactional
     public void removeMemberFromBoard(Board board, User user) {
         Board lockedBoard = boardRepository.findByIdForUpdate(board.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Board not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Board not found"));
 
         BoardMember member = boardMemberRepository.findByBoardAndUserForUpdate(lockedBoard, user)
-                .orElseThrow(() -> new IllegalArgumentException("User is not a member of this board"));
+                .orElseThrow(() -> new AccessDeniedException("User is not a member of this board"));
 
         if (member.getRole() == MembershipRole.MODERATOR && boardMemberRepository.countByBoardAndRole(lockedBoard, MembershipRole.MODERATOR) < 2) {
             throw new IllegalArgumentException("A board cannot have 0 moderators");

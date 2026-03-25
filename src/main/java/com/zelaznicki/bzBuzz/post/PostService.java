@@ -1,7 +1,9 @@
 package com.zelaznicki.bzBuzz.post;
 
 import com.zelaznicki.bzBuzz.board.Board;
+import com.zelaznicki.bzBuzz.board.BoardService;
 import com.zelaznicki.bzBuzz.common.PostSort;
+import com.zelaznicki.bzBuzz.common.ResourceNotFoundException;
 import com.zelaznicki.bzBuzz.common.Status;
 import com.zelaznicki.bzBuzz.user.User;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final PostVoteRepository postVoteRepository;
+    private final BoardService boardService;
 
     private static final int UPVOTE = 1;
     private static final int DOWNVOTE = -1;
@@ -353,7 +356,7 @@ public class PostService {
             throw new IllegalArgumentException("Slug cannot be empty");
         }
 
-        Post post = postRepository.findBySlugAndStatus(normalizedSlug, Status.ENABLED).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        Post post = postRepository.findBySlugAndStatus(normalizedSlug, Status.ENABLED).orElseThrow(() -> new ResourceNotFoundException("Post not found"));
 
         if (post.getCreator() == null || !post.getCreator().getId().equals(user.getId())) {
             throw new IllegalArgumentException("You are not authorized to perform this action");
@@ -361,5 +364,16 @@ public class PostService {
 
         post.setStatus(Status.DISABLED);
         postRepository.save(post);
+    }
+    /**
+     * Resolves the board that the post is in
+     * @param boardName board's unique name
+     * @param slug post slug
+     * @param user the current authenticated user, or null for anonymous access
+     * @return the post if it's validated
+     */
+    public Post getPostAndCheckAccess(String boardName, String slug, User user) {
+        Board board = boardService.getBoardAndCheckAccess(boardName, user);
+        return findByBoardAndSlug(board, slug);
     }
 }

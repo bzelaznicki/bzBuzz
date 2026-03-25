@@ -152,33 +152,5 @@ public class CommentController {
         }
     }
 
-    @PostMapping("/api/b/{boardName}/posts/{slug}/comments/{commentId}/vote")
-    @ResponseBody
-    public ResponseEntity<?> vote(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String boardName,
-            @PathVariable String slug,
-            @PathVariable UUID commentId,
-            @RequestParam int voteType
-    ) {
-        User user = userService.findByUserDetails(userDetails);
-        if (user == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-        }
-        Board board = boardService.getBoardAndCheckAccess(boardName, user);
-        Comment comment = commentService.getComment(commentId);
 
-        Post post = postService.findByBoardAndSlug(board, slug);
-
-        if (!comment.getPost().getId().equals(post.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Comment does not belong to this post");
-        }
-
-        try {
-            VoteResponse result = commentService.vote(comment, user, voteType);
-            return ResponseEntity.ok(Map.of("voteScore", result.voteScore(), "action", result.action()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
-    }
 }
