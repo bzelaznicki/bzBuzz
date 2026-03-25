@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.nio.file.AccessDeniedException;
 import java.util.Map;
 
 @RestControllerAdvice(assignableTypes = VoteController.class)
@@ -22,6 +23,13 @@ public class RestExceptionHandler {
     public ResponseEntity<?> handleBadRequest(IllegalArgumentException e) {
         return ResponseEntity.badRequest()
                 .body(Map.of("error", e.getMessage()));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<?> handleAccessDenied(AccessDeniedException e) {
+        String message = e.getMessage() != null && !e.getMessage().isEmpty() ? e.getMessage() : "Access denied";
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", message));
     }
 
     @ExceptionHandler(ResponseStatusException.class)

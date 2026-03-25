@@ -86,7 +86,7 @@ public class VoteController {
         }
 
         if (!comment.getPost().getId().equals(post.getId())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment does not belong to this post");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found");
         }
             VoteResponse result = commentService.vote(comment, user, voteType);
             return ResponseEntity.ok(Map.of("voteScore", result.voteScore(), "action", result.action()));
