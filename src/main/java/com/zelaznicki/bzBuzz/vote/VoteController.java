@@ -29,6 +29,15 @@ public class VoteController {
     private final PostService postService;
     private final CommentService commentService;
 
+
+    private User requireAuthenticatedUser(UserDetails userDetails) {
+        User user = userService.findByUserDetails(userDetails);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+        }
+
+        return user;
+    }
     /**
      * Apply a vote by the authenticated user to the specified post and return the result as JSON.
      *
@@ -49,10 +58,7 @@ public class VoteController {
             @PathVariable String slug,
             @RequestParam int voteType
     ) {
-        User user = userService.findByUserDetails(userDetails);
-        if (user == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
-        }
+        User user = requireAuthenticatedUser(userDetails);
         Board board = boardService.getBoardAndCheckAccess(boardName, user);
         Post post = postService.getPostAndCheckAccess(boardName, slug, user);
         VoteResponse result = postService.vote(post, user, voteType);
@@ -68,17 +74,19 @@ public class VoteController {
             @PathVariable UUID commentId,
             @RequestParam int voteType
     ) {
-        User user = userService.findByUserDetails(userDetails);
-        if (user == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
-        }
+        User user = requireAuthenticatedUser(userDetails);
         Board board = boardService.getBoardAndCheckAccess(boardName, user);
         Comment comment = commentService.getComment(commentId);
 
-        Post post = postService.findByBoardAndSlug(board, slug);
+        Post post;
+        try {
+            post = postService.findByBoardAndSlug(board, slug);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found");
+        }
 
         if (!comment.getPost().getId().equals(post.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Comment does not belong to this post");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment does not belong to this post");
         }
             VoteResponse result = commentService.vote(comment, user, voteType);
             return ResponseEntity.ok(Map.of("voteScore", result.voteScore(), "action", result.action()));
