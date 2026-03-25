@@ -194,17 +194,19 @@ public class BoardController {
             @PathVariable String name,
             RedirectAttributes redirectAttributes
     ) {
-
+        Board board = null;
         try {
             User user = userService.findByUserDetails(userDetails);
-            Board board = boardService.findByName(name);
+            board = boardService.findByName(name);
             boardService.removeMemberFromBoard(board, user);
 
             redirectAttributes.addFlashAttribute("successMessage", "Left board");
+            return board.isPrivate() ? "redirect:/" : "redirect:/b/" + name;
         } catch  (IllegalArgumentException | AccessDeniedException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return board != null && board.isPrivate() ? "redirect:/" : "redirect:/b/" + name;
         }
-        return "redirect:/b/" + name;
+
 
     }
 
