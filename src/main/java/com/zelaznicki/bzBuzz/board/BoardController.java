@@ -202,9 +202,12 @@ public class BoardController {
 
             redirectAttributes.addFlashAttribute("successMessage", "Left board");
             return board.isPrivate() ? "redirect:/" : "redirect:/b/" + name;
-        } catch  (IllegalArgumentException | AccessDeniedException e) {
+        } catch  (AccessDeniedException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return board != null && board.isPrivate() ? "redirect:/" : "redirect:/b/" + name;
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/b/" + name;
         }
 
 
