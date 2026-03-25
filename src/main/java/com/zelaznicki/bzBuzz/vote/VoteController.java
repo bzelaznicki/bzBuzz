@@ -56,12 +56,9 @@ public class VoteController {
         }
         Board board = boardService.getBoardAndCheckAccess(boardName, user);
         Post post = postService.getPostAndCheckAccess(boardName, slug, user);
-        try {
             VoteResponse result = postService.vote(post, user, voteType);
             return ResponseEntity.ok(Map.of("voteScore", result.voteScore(), "action", result.action()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+
     }
 
     @PostMapping("/api/b/{boardName}/posts/{slug}/comments/{commentId}/vote")
@@ -85,12 +82,8 @@ public class VoteController {
         if (!comment.getPost().getId().equals(post.getId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Comment does not belong to this post");
         }
-
-        try {
             VoteResponse result = commentService.vote(comment, user, voteType);
             return ResponseEntity.ok(Map.of("voteScore", result.voteScore(), "action", result.action()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+
     }
 }
