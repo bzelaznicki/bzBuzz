@@ -8,6 +8,7 @@ import com.zelaznicki.bzBuzz.user.User;
 import com.zelaznicki.bzBuzz.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -197,7 +198,7 @@ public class BoardController {
            boardService.removeMemberFromBoard(board, user);
            redirectAttributes.addFlashAttribute("successMessage", "Left board");
            return board.isPrivate() ? "redirect:/" : "redirect:/b/" + name;
-       } catch (IllegalArgumentException | ResourceNotFoundException e) {
+       } catch (IllegalArgumentException | ResourceNotFoundException | AccessDeniedException e) {
            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
            return "redirect:/b/" + name;
         }
