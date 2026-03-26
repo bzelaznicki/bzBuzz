@@ -69,7 +69,7 @@ public class PostService {
         }
 
         if (url != null) {
-            String lowerUrl = url.toLowerCase();
+            String lowerUrl = url.toLowerCase().trim();
             if (lowerUrl.startsWith("javascript:") || lowerUrl.startsWith("data:")) {
                 throw new IllegalArgumentException("Invalid URL");
             }
