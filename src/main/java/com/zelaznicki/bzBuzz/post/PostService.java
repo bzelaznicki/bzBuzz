@@ -200,7 +200,8 @@ public class PostService {
      * @param text  the new text body to set (applied only if not blank)
      * @param url   the new URL to set (applied only if not blank)
      * @return the persisted updated Post
-     * @throws IllegalArgumentException if the normalized slug is empty, the post is not found, or the user is not authorized to update the post
+     * @throws ResourceNotFoundException if the post is not found, or the user is not authorized to update the post
+     * @throws IllegalArgumentException if the slug is empty
      */
     @Transactional
     public Post updatePost(String slug, User user, String title, String text, PostType postType, String url) {
