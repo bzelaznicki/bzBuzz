@@ -29,6 +29,7 @@ public class PostService {
 
     private static final int UPVOTE = 1;
     private static final int DOWNVOTE = -1;
+    private static final int PAGE_SIZE = 25;
 
     /**
      * Create a URL-friendly slug from a post title with a short random suffix.
@@ -154,7 +155,7 @@ public class PostService {
      * @return the enabled posts for the board ordered according to {@code postSort}
      */
     public Page<Post> findByBoard(Board board, PostSort postSort, int page) {
-        Pageable pageable = PageRequest.of(page, 25);
+        Pageable pageable = PageRequest.of(page, PAGE_SIZE);
         return switch (postSort) {
             case NEW -> postRepository.findAllByBoardAndStatusOrderByCreatedAtDesc(board, Status.ENABLED, pageable);
             case UPDATED -> postRepository.findAllByBoardAndStatusOrderByUpdatedAtDesc(board, Status.ENABLED, pageable);
@@ -186,7 +187,7 @@ public class PostService {
      * @return a list of enabled posts created by the given user ordered per {@code postSort}
      */
     public Page<Post> findByUser(User user, PostSort postSort, int page) {
-        Pageable pageable =  PageRequest.of(page, 25);
+        Pageable pageable =  PageRequest.of(page, PAGE_SIZE);
         return switch (postSort) {
             case NEW -> postRepository.findAllByCreatorAndStatusOrderByCreatedAtDesc(user, Status.ENABLED, pageable);
             case UPDATED -> postRepository.findAllByCreatorAndStatusOrderByUpdatedAtDesc(user, Status.ENABLED, pageable);

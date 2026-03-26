@@ -94,7 +94,7 @@ public class BoardController {
 
         model.addAttribute("isMember", isMember);
 
-        List<Post> posts = postService.findByBoard(board, PostSort.TOP);
+        List<Post> posts = postService.findByBoard(board, PostSort.TOP,);
 
         model.addAttribute("posts", posts);
 
