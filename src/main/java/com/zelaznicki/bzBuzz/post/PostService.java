@@ -69,7 +69,7 @@ public class PostService {
         }
 
         if (url != null) {
-            String lowerUrl = url.toLowerCase().trim();
+            String lowerUrl = url.toLowerCase();
             if (lowerUrl.startsWith("javascript:") || lowerUrl.startsWith("data:")) {
                 throw new IllegalArgumentException("Invalid URL");
             }
@@ -108,7 +108,7 @@ public class PostService {
     @Transactional
     public Post create(User user, Board board, String title, String text, PostType postType, String url) {
         String normalizedText = (text == null || text.isBlank()) ? null : text;
-        String normalizedUrl = (url == null || url.isBlank()) ? null : url;
+        String normalizedUrl = (url == null || url.isBlank()) ? null : url.trim();
         String normalizedTitle = title == null ? "" : title.trim();
 
         validatePostData(normalizedTitle, normalizedText, postType, normalizedUrl);
@@ -218,7 +218,7 @@ public class PostService {
 
         String normalizedTitle = title == null ? "" : title.trim();
         String normalizedText = (text == null || text.isBlank()) ? null : text;
-        String normalizedUrl = (url == null || url.isBlank()) ? null : url;
+        String normalizedUrl = (url == null || url.isBlank()) ? null : url.trim();
 
 
         if (!normalizedTitle.isEmpty()) {
