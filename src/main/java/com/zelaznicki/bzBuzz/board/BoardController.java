@@ -1,6 +1,7 @@
 package com.zelaznicki.bzBuzz.board;
 
 import com.zelaznicki.bzBuzz.common.PostSort;
+import com.zelaznicki.bzBuzz.common.ResourceNotFoundException;
 import com.zelaznicki.bzBuzz.post.Post;
 import com.zelaznicki.bzBuzz.post.PostService;
 import com.zelaznicki.bzBuzz.user.User;
@@ -189,13 +190,14 @@ public class BoardController {
             @PathVariable String name,
             RedirectAttributes redirectAttributes
     ) {
-       User user = userService.findByUserDetails(userDetails);
-       Board board = boardService.findByName(name);
+
        try {
+           User user = userService.findByUserDetails(userDetails);
+           Board board = boardService.findByName(name);
            boardService.removeMemberFromBoard(board, user);
            redirectAttributes.addFlashAttribute("successMessage", "Left board");
            return board.isPrivate() ? "redirect:/" : "redirect:/b/" + name;
-       } catch (IllegalArgumentException e) {
+       } catch (IllegalArgumentException | ResourceNotFoundException e) {
            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
            return "redirect:/b/" + name;
         }
