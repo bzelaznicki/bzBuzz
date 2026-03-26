@@ -165,18 +165,12 @@ public class PostService {
 
     public Post findByBoardAndSlug(Board board, String slug) {
         String normalizedSlug = getNormalizedSlug(slug);
-        Optional<Post> foundPost = postRepository.findBySlugAndStatus(normalizedSlug, Status.ENABLED);
-
-        if (foundPost.isPresent()) {
-            Post post = foundPost.get();
-
-            if (post.getBoard().equals(board)) {
-                return post;
-            } else {
-                throw new ResourceNotFoundException("Post not found");
-            }
+        Post post = postRepository.findBySlugAndStatus(normalizedSlug, Status.ENABLED)
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
+        if (!post.getBoard().equals(board)) {
+            throw new ResourceNotFoundException("Post not found");
         }
-        throw new ResourceNotFoundException("Post not found");
+        return post;
     }
 
     /**
@@ -215,7 +209,7 @@ public class PostService {
         if (normalizedSlug.isEmpty()) {
             throw new IllegalArgumentException("Slug cannot be empty");
         }
-        Post post = postRepository.findBySlugAndStatus(normalizedSlug, Status.ENABLED).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        Post post = postRepository.findBySlugAndStatus(normalizedSlug, Status.ENABLED).orElseThrow(() -> new ResourceNotFoundException("Post not found"));
 
         if (post.getCreator() == null || !post.getCreator().getId().equals(user.getId())) {
             throw new IllegalArgumentException("You are not authorized to perform this action");
@@ -332,16 +326,9 @@ public class PostService {
      *         or an empty map if the user has not voted on the post
      */
     public Map<UUID, Integer> findVoteByPostAndUser(Post post, User user) {
-        Optional<PostVote> postVote = postVoteRepository.findByPostAndUser(post, user);
-
-        if (postVote.isPresent()) {
-            PostVote currentVote = postVote.get();
-            return Map.of(
-                    post.getId(), currentVote.getVoteType()
-            );
-        } else {
-            return Map.of();
-        }
+        return postVoteRepository.findByPostAndUser(post, user)
+                .map(v -> Map.of(post.getId(), v.getVoteType()))
+                .orElse(Map.of());
     }
 
     /**
