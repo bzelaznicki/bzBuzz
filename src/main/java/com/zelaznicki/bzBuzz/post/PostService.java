@@ -7,6 +7,9 @@ import com.zelaznicki.bzBuzz.common.ResourceNotFoundException;
 import com.zelaznicki.bzBuzz.common.Status;
 import com.zelaznicki.bzBuzz.user.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,7 +69,7 @@ public class PostService {
 
         if (url != null) {
             String lowerUrl = url.toLowerCase();
-            if (lowerUrl.startsWith("javascript:") && lowerUrl.startsWith("data:")) {
+            if (lowerUrl.startsWith("javascript:") || lowerUrl.startsWith("data:")) {
                 throw new IllegalArgumentException("Invalid URL");
             }
         }
@@ -107,11 +110,8 @@ public class PostService {
         String normalizedUrl = (url == null || url.isBlank()) ? null : url;
         String normalizedTitle = title == null ? "" : title.trim();
 
-        try {
-            validatePostData(normalizedTitle, normalizedText, postType, normalizedUrl);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(e.getMessage());
-        }
+        validatePostData(normalizedTitle, normalizedText, postType, normalizedUrl);
+
 
         String slug = generateSlug(normalizedTitle);
 
@@ -142,7 +142,7 @@ public class PostService {
         String normalizedSlug = getNormalizedSlug(slug);
 
         return postRepository.findBySlugAndStatus(normalizedSlug, Status.ENABLED)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
     }
 
 
@@ -153,11 +153,12 @@ public class PostService {
      * @param postSort the ordering to apply: NEW (creation time desc), UPDATED (update time desc), or TOP (vote score desc)
      * @return the enabled posts for the board ordered according to {@code postSort}
      */
-    public List<Post> findByBoard(Board board, PostSort postSort) {
+    public Page<Post> findByBoard(Board board, PostSort postSort, int page) {
+        Pageable pageable = PageRequest.of(page, 25);
         return switch (postSort) {
-            case NEW -> postRepository.findAllByBoardAndStatusOrderByCreatedAtDesc(board, Status.ENABLED);
-            case UPDATED -> postRepository.findAllByBoardAndStatusOrderByUpdatedAtDesc(board, Status.ENABLED);
-            case TOP -> postRepository.findAllByBoardAndStatusOrderByVoteScoreDesc(board, Status.ENABLED);
+            case NEW -> postRepository.findAllByBoardAndStatusOrderByCreatedAtDesc(board, Status.ENABLED, pageable);
+            case UPDATED -> postRepository.findAllByBoardAndStatusOrderByUpdatedAtDesc(board, Status.ENABLED, pageable);
+            case TOP -> postRepository.findAllByBoardAndStatusOrderByVoteScoreDesc(board, Status.ENABLED, pageable);
         };
     }
 
@@ -171,10 +172,10 @@ public class PostService {
             if (post.getBoard().equals(board)) {
                 return post;
             } else {
-                throw new IllegalArgumentException("Post is not part of this board");
+                throw new ResourceNotFoundException("Post not found");
             }
         }
-        throw new IllegalArgumentException("Post not found");
+        throw new ResourceNotFoundException("Post not found");
     }
 
     /**
@@ -184,11 +185,12 @@ public class PostService {
      * @param postSort the sort order to apply: NEW (created time desc), UPDATED (updated time desc), or TOP (vote score desc)
      * @return a list of enabled posts created by the given user ordered per {@code postSort}
      */
-    public List<Post> findByUser(User user, PostSort postSort) {
+    public Page<Post> findByUser(User user, PostSort postSort, int page) {
+        Pageable pageable =  PageRequest.of(page, 25);
         return switch (postSort) {
-            case NEW -> postRepository.findAllByCreatorAndStatusOrderByCreatedAtDesc(user, Status.ENABLED);
-            case UPDATED -> postRepository.findAllByCreatorAndStatusOrderByUpdatedAtDesc(user, Status.ENABLED);
-            case TOP -> postRepository.findAllByCreatorAndStatusOrderByVoteScoreDesc(user, Status.ENABLED);
+            case NEW -> postRepository.findAllByCreatorAndStatusOrderByCreatedAtDesc(user, Status.ENABLED, pageable);
+            case UPDATED -> postRepository.findAllByCreatorAndStatusOrderByUpdatedAtDesc(user, Status.ENABLED, pageable);
+            case TOP -> postRepository.findAllByCreatorAndStatusOrderByVoteScoreDesc(user, Status.ENABLED, pageable);
         };
     }
 
