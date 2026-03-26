@@ -6,8 +6,7 @@ import com.zelaznicki.bzBuzz.post.PostService;
 import com.zelaznicki.bzBuzz.user.User;
 import com.zelaznicki.bzBuzz.user.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -19,10 +18,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
+
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
+
 
 @Controller
 @RequiredArgsConstructor
@@ -72,31 +71,27 @@ public class BoardController {
      * @throws ResponseStatusException with status 403 if the board is private and the user is not a member
      */
     @GetMapping("/b/{name}")
-    public String boardPage(@AuthenticationPrincipal UserDetails userDetails, @PathVariable String name, Model model) {
+    public String boardPage(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @PathVariable String name,
+            Model model) {
         User user =  userService.findByUserDetails(userDetails);
         model.addAttribute("currentUser", user);
-        Board board;
-
-        try {
-            board = boardService.findByName(name);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
+        Board board = boardService.getBoardAndCheckAccess(name, user);
 
         boolean isMember = user != null && boardService.isMember(board, user);
-        if (board.isPrivate() && !isMember) {
-            throw  new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
-
 
 
         model.addAttribute("board", board);
 
         model.addAttribute("isMember", isMember);
 
-        List<Post> posts = postService.findByBoard(board, PostSort.TOP,);
+        Page<Post> posts = postService.findByBoard(board, PostSort.TOP, page);
 
         model.addAttribute("posts", posts);
+        model.addAttribute("currentPage", posts.getNumber());
+        model.addAttribute("totalPages", posts.getTotalPages());
 
         if (user != null) {
             Map<UUID, Integer> voteMap = postService.findVotesByBoardAndUser(board, user);
@@ -194,22 +189,16 @@ public class BoardController {
             @PathVariable String name,
             RedirectAttributes redirectAttributes
     ) {
-        Board board = null;
-        try {
-            User user = userService.findByUserDetails(userDetails);
-            board = boardService.findByName(name);
-            boardService.removeMemberFromBoard(board, user);
-
-            redirectAttributes.addFlashAttribute("successMessage", "Left board");
-            return board.isPrivate() ? "redirect:/" : "redirect:/b/" + name;
-        } catch  (AccessDeniedException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return board != null && board.isPrivate() ? "redirect:/" : "redirect:/b/" + name;
-        } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/b/" + name;
+       User user = userService.findByUserDetails(userDetails);
+       Board board = boardService.findByName(name);
+       try {
+           boardService.removeMemberFromBoard(board, user);
+           redirectAttributes.addFlashAttribute("successMessage", "Left board");
+           return board.isPrivate() ? "redirect:/" : "redirect:/b/" + name;
+       } catch (IllegalArgumentException e) {
+           redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+           return "redirect:/b/" + name;
         }
-
 
     }
 
