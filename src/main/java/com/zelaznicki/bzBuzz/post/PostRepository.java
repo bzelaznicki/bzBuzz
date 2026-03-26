@@ -33,7 +33,7 @@ Optional<Post> findBySlug(String slug);
  *
  * @param board  the board to filter posts by
  * @param status the status to filter posts by
- * @return a list of posts matching the board and status, ordered by `createdAt` descending
+ * @return a page of posts matching the board and status, ordered by `createdAt` descending
  */
 Page<Post> findAllByBoardAndStatusOrderByCreatedAtDesc(Board board, Status status, Pageable pageable);
     /**
