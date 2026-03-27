@@ -321,12 +321,9 @@ public class PostService {
     }
 
     /**
-     * Retrieve the vote type for a specific post by a given user as a single-entry map.
+     * Retrieves the vote made by the given user on the specified post as a single-entry map.
      *
-     * @param post the post to check for a vote
-     * @param user the user whose vote is queried
-     * @return a map containing the post's UUID mapped to the vote type (`1` for upvote, `-1` for downvote),
-     *         or an empty map if the user has not voted on the post
+     * @return a map mapping the post's UUID to the vote type (`1` for upvote, `-1` for downvote), or an empty map if the user has not voted on the post
      */
     public Map<UUID, Integer> findVoteByPostAndUser(Post post, User user) {
         return postVoteRepository.findByPostAndUser(post, user)
@@ -334,6 +331,12 @@ public class PostService {
                 .orElse(Map.of());
     }
 
+    /**
+     * Produce a map of enabled comment counts keyed by post UUID for the given posts.
+     *
+     * @param posts the posts to count enabled comments for; may be null or empty
+     * @return a map where each key is a post UUID and each value is the number of enabled comments for that post; empty if `posts` is null or empty
+     */
     public Map<UUID, Long> getCommentCounts(List<Post> posts) {
         if (posts == null || posts.isEmpty()) {
             return Map.of();
