@@ -922,3 +922,14 @@ body {
     color: #0079d3;
     border-bottom-color: #0079d3;
 }
+
+.post-comment-count {
+    color: #878a8c;
+    font-size: 0.75rem;
+    text-decoration: none;
+}
+
+.post-comment-count:hover {
+    color: #1c1c1c;
+    text-decoration: underline;
+}

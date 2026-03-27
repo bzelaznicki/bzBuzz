@@ -61,17 +61,28 @@ public class BoardController {
     }
 
     /**
-     * Render a board page showing board details, posts, membership status, and the current user's votes.
-     *
-     * Adds the following model attributes: "currentUser", "board", "isMember", "posts", and "userVotes".
-     *
-     * @param userDetails the authenticated principal (may be null)
-     * @param name the board name from the path
-     * @param model the MVC model to populate for the view
-     * @return the view name "board/home"
-     * @throws ResponseStatusException with status 404 if no board with the given name exists
-     * @throws ResponseStatusException with status 403 if the board is private and the user is not a member
-     */
+         * Render the board page with board details, paged posts, membership status, per-post comment counts, and the current user's votes.
+         *
+         * Adds the following model attributes:
+         * - "currentUser": the resolved application User or null
+         * - "board": the requested Board
+         * - "isMember": `true` if the current user is a member of the board, `false` otherwise
+         * - "posts": a Page of Post for the requested page and sort
+         * - "commentCounts": a Map from Post UUID to comment count for the page's posts
+         * - "currentPage": the current page index
+         * - "currentSort": the requested PostSort
+         * - "totalPages": total number of pages available
+         * - "userVotes": a Map from Post UUID to the current user's vote value, or an empty Map if anonymous
+         *
+         * @param userDetails the authenticated principal (may be null)
+         * @param page the zero-based page index of posts to display
+         * @param sort the sorting mode for posts
+         * @param name the board name from the path
+         * @param model the MVC model to populate for the view
+         * @return the view name "board/home"
+         * @throws ResponseStatusException with status 404 if no board with the given name exists
+         * @throws ResponseStatusException with status 403 if the board is private and the user is not a member
+         */
     @GetMapping("/b/{name}")
     public String boardPage(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -86,13 +97,17 @@ public class BoardController {
         boolean isMember = user != null && boardService.isMember(board, user);
 
 
+
         model.addAttribute("board", board);
 
         model.addAttribute("isMember", isMember);
 
         Page<Post> posts = postService.findByBoard(board, sort, page);
 
+        Map<UUID, Long> commentCounts = postService.getCommentCounts(posts.getContent());
+
         model.addAttribute("posts", posts);
+        model.addAttribute("commentCounts", commentCounts);
         model.addAttribute("currentPage", posts.getNumber());
         model.addAttribute("currentSort", sort);
         model.addAttribute("totalPages", posts.getTotalPages());

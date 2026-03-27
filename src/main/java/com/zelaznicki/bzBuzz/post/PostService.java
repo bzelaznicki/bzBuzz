@@ -2,6 +2,7 @@ package com.zelaznicki.bzBuzz.post;
 
 import com.zelaznicki.bzBuzz.board.Board;
 import com.zelaznicki.bzBuzz.board.BoardService;
+import com.zelaznicki.bzBuzz.comment.CommentRepository;
 import com.zelaznicki.bzBuzz.common.PostSort;
 import com.zelaznicki.bzBuzz.common.ResourceNotFoundException;
 import com.zelaznicki.bzBuzz.common.Status;
@@ -25,6 +26,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final PostVoteRepository postVoteRepository;
+    private final CommentRepository commentRepository;
     private final BoardService boardService;
 
     private static final int UPVOTE = 1;
@@ -319,17 +321,33 @@ public class PostService {
     }
 
     /**
-     * Retrieve the vote type for a specific post by a given user as a single-entry map.
+     * Retrieves the vote made by the given user on the specified post as a single-entry map.
      *
-     * @param post the post to check for a vote
-     * @param user the user whose vote is queried
-     * @return a map containing the post's UUID mapped to the vote type (`1` for upvote, `-1` for downvote),
-     *         or an empty map if the user has not voted on the post
+     * @param post the post to check for votes
+     * @param user the user whose vote to retrieve
+     * @return a map mapping the post's UUID to the vote type (`1` for upvote, `-1` for downvote), or an empty map if the user has not voted on the post
      */
     public Map<UUID, Integer> findVoteByPostAndUser(Post post, User user) {
         return postVoteRepository.findByPostAndUser(post, user)
                 .map(v -> Map.of(post.getId(), v.getVoteType()))
                 .orElse(Map.of());
+    }
+
+    /**
+     * Produce a map of enabled comment counts keyed by post UUID for the given posts.
+     *
+     * @param posts the posts to count enabled comments for; may be null or empty
+     * @return a map where each key is a post UUID and each value is the number of enabled comments for that post; empty if `posts` is null or empty
+     */
+    public Map<UUID, Long> getCommentCounts(List<Post> posts) {
+        if (posts == null || posts.isEmpty()) {
+            return Map.of();
+        }
+        return commentRepository.countByPostsAndStatus(posts, Status.ENABLED).stream()
+                .collect(Collectors.toMap(
+                        row -> (UUID) row[0],
+                        row -> (Long) row[1]
+                ));
     }
 
     /**
