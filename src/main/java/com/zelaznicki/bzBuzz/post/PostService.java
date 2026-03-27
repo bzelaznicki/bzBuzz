@@ -323,6 +323,8 @@ public class PostService {
     /**
      * Retrieves the vote made by the given user on the specified post as a single-entry map.
      *
+     * @param post the post to check for votes
+     * @param user the user whose vote to retrieve
      * @return a map mapping the post's UUID to the vote type (`1` for upvote, `-1` for downvote), or an empty map if the user has not voted on the post
      */
     public Map<UUID, Integer> findVoteByPostAndUser(Post post, User user) {
