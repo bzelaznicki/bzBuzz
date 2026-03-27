@@ -892,3 +892,33 @@ body {
     font-size: 0.875rem;
     color: #878a8c;
 }
+
+/* Sort tabs */
+.sort-tabs {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #edeff1;
+    padding-bottom: 0;
+}
+
+.sort-tab {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #878a8c;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.sort-tab:hover {
+    color: #1c1c1c;
+    background: #f6f7f8;
+}
+
+.sort-tab.active {
+    color: #0079d3;
+    border-bottom-color: #0079d3;
+}

@@ -51,7 +51,17 @@
 
     <div class="board-content">
         <div class="posts">
-
+            <div class="sort-tabs">
+                <a th:href="@{/b/{name}(name=${board.name}, sort='TOP', page=0)}"
+                   th:classappend="${currentSort.name() == 'TOP'} ? ' active' : ''"
+                   class="sort-tab">Top</a>
+                <a th:href="@{/b/{name}(name=${board.name}, sort='NEW', page=0)}"
+                   th:classappend="${currentSort.name() == 'NEW'} ? ' active' : ''"
+                   class="sort-tab">New</a>
+                <a th:href="@{/b/{name}(name=${board.name}, sort='UPDATED', page=0)}"
+                   th:classappend="${currentSort.name() == 'UPDATED'} ? ' active' : ''"
+                   class="sort-tab">Updated</a>
+            </div>
             <div th:if="${posts.content.empty}" class="empty-state">
                 <p>No posts yet.</p>
                 <a sec:authorize="isAuthenticated()"
@@ -102,7 +112,7 @@
 
             <div class="pagination" th:if="${totalPages > 1}">
                 <a th:if="${currentPage > 0}"
-                   th:href="@{/b/{name}(name=${board.name}, page=${currentPage - 1})}"
+                   th:href="@{/b/{name}(name=${board.name}, page=${currentPage - 1}, sort=${currentSort})}"
                    class="btn btn-ghost btn-sm">← Previous</a>
 
                 <span class="pagination-info"
@@ -110,7 +120,7 @@
                 </span>
 
                 <a th:if="${currentPage + 1 < totalPages}"
-                   th:href="@{/b/{name}(name=${board.name}, page=${currentPage + 1})}"
+                   th:href="@{/b/{name}(name=${board.name}, page=${currentPage + 1}, sort=${currentSort})}"
                    class="btn btn-ghost btn-sm">Next →</a>
             </div>
 
