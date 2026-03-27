@@ -76,6 +76,7 @@ public class BoardController {
     public String boardPage(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "TOP") PostSort sort,
             @PathVariable String name,
             Model model) {
         User user =  userService.findByUserDetails(userDetails);
@@ -89,10 +90,11 @@ public class BoardController {
 
         model.addAttribute("isMember", isMember);
 
-        Page<Post> posts = postService.findByBoard(board, PostSort.TOP, page);
+        Page<Post> posts = postService.findByBoard(board, sort, page);
 
         model.addAttribute("posts", posts);
         model.addAttribute("currentPage", posts.getNumber());
+        model.addAttribute("currentSort", sort);
         model.addAttribute("totalPages", posts.getTotalPages());
 
         if (user != null) {
