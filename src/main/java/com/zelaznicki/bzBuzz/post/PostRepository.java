@@ -4,6 +4,8 @@ import com.zelaznicki.bzBuzz.board.Board;
 import com.zelaznicki.bzBuzz.common.Status;
 import com.zelaznicki.bzBuzz.user.User;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
@@ -12,7 +14,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -32,9 +33,9 @@ Optional<Post> findBySlug(String slug);
  *
  * @param board  the board to filter posts by
  * @param status the status to filter posts by
- * @return a list of posts matching the board and status, ordered by `createdAt` descending
+ * @return a page of posts matching the board and status, ordered by `createdAt` descending
  */
-List<Post> findAllByBoardAndStatusOrderByCreatedAtDesc(Board board, Status status);
+Page<Post> findAllByBoardAndStatusOrderByCreatedAtDesc(Board board, Status status, Pageable pageable);
     /**
  * Retrieves posts from the given board with the specified status, ordered by `updatedAt` descending.
  *
@@ -42,7 +43,7 @@ List<Post> findAllByBoardAndStatusOrderByCreatedAtDesc(Board board, Status statu
  * @param status the status that retrieved posts must have
  * @return       a list of matching Post entities ordered by most recently updated first
  */
-List<Post> findAllByBoardAndStatusOrderByUpdatedAtDesc(Board board, Status status);
+Page<Post> findAllByBoardAndStatusOrderByUpdatedAtDesc(Board board, Status status, Pageable pageable);
     /**
  * Finds posts within the specified board that have the given status, ordered by vote score descending.
  *
@@ -50,7 +51,7 @@ List<Post> findAllByBoardAndStatusOrderByUpdatedAtDesc(Board board, Status statu
  * @param status the status to filter posts by
  * @return       a list of Post entities matching the board and status, ordered by vote score (highest first)
  */
-List<Post> findAllByBoardAndStatusOrderByVoteScoreDesc(Board board, Status status);
+Page<Post> findAllByBoardAndStatusOrderByVoteScoreDesc(Board board, Status status, Pageable pageable);
     /**
  * Retrieve posts created by the given user with the specified status, sorted by creation time descending.
  *
@@ -58,7 +59,7 @@ List<Post> findAllByBoardAndStatusOrderByVoteScoreDesc(Board board, Status statu
  * @param status the status to filter posts by
  * @return       a list of posts created by the user with the given status, ordered by newest first (createdAt descending)
  */
-List<Post> findAllByCreatorAndStatusOrderByCreatedAtDesc(User user, Status status);
+Page<Post> findAllByCreatorAndStatusOrderByCreatedAtDesc(User user, Status status, Pageable pageable);
     /**
  * Finds posts created by the given user with the specified status, ordered by most recently updated first.
  *
@@ -66,7 +67,7 @@ List<Post> findAllByCreatorAndStatusOrderByCreatedAtDesc(User user, Status statu
  * @param status the status that matching posts must have
  * @return       the list of matching posts ordered by `updatedAt` descending
  */
-List<Post> findAllByCreatorAndStatusOrderByUpdatedAtDesc(User user, Status status);
+Page<Post> findAllByCreatorAndStatusOrderByUpdatedAtDesc(User user, Status status, Pageable pageable);
     /**
  * Retrieve posts created by the given user with the specified status, ordered by vote score descending.
  *
@@ -74,7 +75,7 @@ List<Post> findAllByCreatorAndStatusOrderByUpdatedAtDesc(User user, Status statu
  * @param status the status to filter posts by
  * @return a list of posts matching the creator and status, ordered by `voteScore` from highest to lowest
  */
-List<Post> findAllByCreatorAndStatusOrderByVoteScoreDesc(User user, Status status);
+Page<Post> findAllByCreatorAndStatusOrderByVoteScoreDesc(User user, Status status, Pageable pageable);
 
     /**
      * Fetches a post by its id while acquiring a pessimistic write lock on the selected row.

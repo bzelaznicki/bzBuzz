@@ -78,12 +78,7 @@ public class VoteController {
         Board board = boardService.getBoardAndCheckAccess(boardName, user);
         Comment comment = commentService.getComment(commentId);
 
-        Post post;
-        try {
-            post = postService.findByBoardAndSlug(board, slug);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found");
-        }
+        Post post = postService.findByBoardAndSlug(board, slug);
 
         if (!comment.getPost().getId().equals(post.getId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found");

@@ -877,3 +877,18 @@ body {
     color: #878a8c;
     margin-bottom: 1.5rem;
 }
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #edeff1;
+}
+
+.pagination-info {
+    font-size: 0.875rem;
+    color: #878a8c;
+}

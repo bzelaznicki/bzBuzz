@@ -52,7 +52,7 @@
     <div class="board-content">
         <div class="posts">
 
-            <div th:if="${posts.empty}" class="empty-state">
+            <div th:if="${posts.content.empty}" class="empty-state">
                 <p>No posts yet.</p>
                 <a sec:authorize="isAuthenticated()"
                    th:if="${isMember}"
@@ -62,8 +62,8 @@
                 </a>
             </div>
 
-            <div th:unless="${posts.empty}" class="post-list">
-                <div th:each="post : ${posts}" class="post-card">
+            <div th:unless="${posts.content.empty}" class="post-list">
+                <div th:each="post : ${posts.content}" class="post-card">
 
                     <div th:replace="~{fragments/post-vote :: voteButtons(${post}, ${board.name}, ${userVotes})}"></div>
 
@@ -98,6 +98,20 @@
                     </div>
 
                 </div>
+            </div>
+
+            <div class="pagination" th:if="${totalPages > 1}">
+                <a th:if="${currentPage > 0}"
+                   th:href="@{/b/{name}(name=${board.name}, page=${currentPage - 1})}"
+                   class="btn btn-ghost btn-sm">← Previous</a>
+
+                <span class="pagination-info"
+                      th:text="${currentPage + 1} + ' / ' + ${totalPages}">
+                </span>
+
+                <a th:if="${currentPage + 1 < totalPages}"
+                   th:href="@{/b/{name}(name=${board.name}, page=${currentPage + 1})}"
+                   class="btn btn-ghost btn-sm">Next →</a>
             </div>
 
         </div>

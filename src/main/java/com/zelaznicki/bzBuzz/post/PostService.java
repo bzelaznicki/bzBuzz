@@ -7,6 +7,9 @@ import com.zelaznicki.bzBuzz.common.ResourceNotFoundException;
 import com.zelaznicki.bzBuzz.common.Status;
 import com.zelaznicki.bzBuzz.user.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +29,7 @@ public class PostService {
 
     private static final int UPVOTE = 1;
     private static final int DOWNVOTE = -1;
+    private static final int PAGE_SIZE = 25;
 
     /**
      * Create a URL-friendly slug from a post title with a short random suffix.
@@ -65,8 +69,8 @@ public class PostService {
         }
 
         if (url != null) {
-            String lowerUrl = url.toLowerCase();
-            if (lowerUrl.startsWith("javascript:") && lowerUrl.startsWith("data:")) {
+            String lowerUrl = url.trim().toLowerCase();
+            if (lowerUrl.startsWith("javascript:") || lowerUrl.startsWith("data:")) {
                 throw new IllegalArgumentException("Invalid URL");
             }
         }
@@ -104,14 +108,11 @@ public class PostService {
     @Transactional
     public Post create(User user, Board board, String title, String text, PostType postType, String url) {
         String normalizedText = (text == null || text.isBlank()) ? null : text;
-        String normalizedUrl = (url == null || url.isBlank()) ? null : url;
+        String normalizedUrl = (url == null || url.isBlank()) ? null : url.trim();
         String normalizedTitle = title == null ? "" : title.trim();
 
-        try {
-            validatePostData(normalizedTitle, normalizedText, postType, normalizedUrl);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(e.getMessage());
-        }
+        validatePostData(normalizedTitle, normalizedText, postType, normalizedUrl);
+
 
         String slug = generateSlug(normalizedTitle);
 
@@ -142,7 +143,7 @@ public class PostService {
         String normalizedSlug = getNormalizedSlug(slug);
 
         return postRepository.findBySlugAndStatus(normalizedSlug, Status.ENABLED)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
     }
 
 
@@ -153,28 +154,23 @@ public class PostService {
      * @param postSort the ordering to apply: NEW (creation time desc), UPDATED (update time desc), or TOP (vote score desc)
      * @return the enabled posts for the board ordered according to {@code postSort}
      */
-    public List<Post> findByBoard(Board board, PostSort postSort) {
+    public Page<Post> findByBoard(Board board, PostSort postSort, int page) {
+        Pageable pageable = PageRequest.of(page, PAGE_SIZE);
         return switch (postSort) {
-            case NEW -> postRepository.findAllByBoardAndStatusOrderByCreatedAtDesc(board, Status.ENABLED);
-            case UPDATED -> postRepository.findAllByBoardAndStatusOrderByUpdatedAtDesc(board, Status.ENABLED);
-            case TOP -> postRepository.findAllByBoardAndStatusOrderByVoteScoreDesc(board, Status.ENABLED);
+            case NEW -> postRepository.findAllByBoardAndStatusOrderByCreatedAtDesc(board, Status.ENABLED, pageable);
+            case UPDATED -> postRepository.findAllByBoardAndStatusOrderByUpdatedAtDesc(board, Status.ENABLED, pageable);
+            case TOP -> postRepository.findAllByBoardAndStatusOrderByVoteScoreDesc(board, Status.ENABLED, pageable);
         };
     }
 
     public Post findByBoardAndSlug(Board board, String slug) {
         String normalizedSlug = getNormalizedSlug(slug);
-        Optional<Post> foundPost = postRepository.findBySlugAndStatus(normalizedSlug, Status.ENABLED);
-
-        if (foundPost.isPresent()) {
-            Post post = foundPost.get();
-
-            if (post.getBoard().equals(board)) {
-                return post;
-            } else {
-                throw new IllegalArgumentException("Post is not part of this board");
-            }
+        Post post = postRepository.findBySlugAndStatus(normalizedSlug, Status.ENABLED)
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
+        if (!post.getBoard().equals(board)) {
+            throw new ResourceNotFoundException("Post not found");
         }
-        throw new IllegalArgumentException("Post not found");
+        return post;
     }
 
     /**
@@ -184,11 +180,12 @@ public class PostService {
      * @param postSort the sort order to apply: NEW (created time desc), UPDATED (updated time desc), or TOP (vote score desc)
      * @return a list of enabled posts created by the given user ordered per {@code postSort}
      */
-    public List<Post> findByUser(User user, PostSort postSort) {
+    public Page<Post> findByUser(User user, PostSort postSort, int page) {
+        Pageable pageable =  PageRequest.of(page, PAGE_SIZE);
         return switch (postSort) {
-            case NEW -> postRepository.findAllByCreatorAndStatusOrderByCreatedAtDesc(user, Status.ENABLED);
-            case UPDATED -> postRepository.findAllByCreatorAndStatusOrderByUpdatedAtDesc(user, Status.ENABLED);
-            case TOP -> postRepository.findAllByCreatorAndStatusOrderByVoteScoreDesc(user, Status.ENABLED);
+            case NEW -> postRepository.findAllByCreatorAndStatusOrderByCreatedAtDesc(user, Status.ENABLED, pageable);
+            case UPDATED -> postRepository.findAllByCreatorAndStatusOrderByUpdatedAtDesc(user, Status.ENABLED, pageable);
+            case TOP -> postRepository.findAllByCreatorAndStatusOrderByVoteScoreDesc(user, Status.ENABLED, pageable);
         };
     }
 
@@ -203,7 +200,8 @@ public class PostService {
      * @param text  the new text body to set (applied only if not blank)
      * @param url   the new URL to set (applied only if not blank)
      * @return the persisted updated Post
-     * @throws IllegalArgumentException if the normalized slug is empty, the post is not found, or the user is not authorized to update the post
+     * @throws ResourceNotFoundException if the post is not found
+     * @throws IllegalArgumentException if the slug is empty or the user is not authorized to update the post
      */
     @Transactional
     public Post updatePost(String slug, User user, String title, String text, PostType postType, String url) {
@@ -212,7 +210,7 @@ public class PostService {
         if (normalizedSlug.isEmpty()) {
             throw new IllegalArgumentException("Slug cannot be empty");
         }
-        Post post = postRepository.findBySlugAndStatus(normalizedSlug, Status.ENABLED).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        Post post = postRepository.findBySlugAndStatus(normalizedSlug, Status.ENABLED).orElseThrow(() -> new ResourceNotFoundException("Post not found"));
 
         if (post.getCreator() == null || !post.getCreator().getId().equals(user.getId())) {
             throw new IllegalArgumentException("You are not authorized to perform this action");
@@ -220,7 +218,7 @@ public class PostService {
 
         String normalizedTitle = title == null ? "" : title.trim();
         String normalizedText = (text == null || text.isBlank()) ? null : text;
-        String normalizedUrl = (url == null || url.isBlank()) ? null : url;
+        String normalizedUrl = (url == null || url.isBlank()) ? null : url.trim();
 
 
         if (!normalizedTitle.isEmpty()) {
@@ -329,16 +327,9 @@ public class PostService {
      *         or an empty map if the user has not voted on the post
      */
     public Map<UUID, Integer> findVoteByPostAndUser(Post post, User user) {
-        Optional<PostVote> postVote = postVoteRepository.findByPostAndUser(post, user);
-
-        if (postVote.isPresent()) {
-            PostVote currentVote = postVote.get();
-            return Map.of(
-                    post.getId(), currentVote.getVoteType()
-            );
-        } else {
-            return Map.of();
-        }
+        return postVoteRepository.findByPostAndUser(post, user)
+                .map(v -> Map.of(post.getId(), v.getVoteType()))
+                .orElse(Map.of());
     }
 
     /**
