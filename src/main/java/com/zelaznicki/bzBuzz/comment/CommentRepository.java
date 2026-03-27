@@ -1,5 +1,6 @@
 package com.zelaznicki.bzBuzz.comment;
 
+import com.zelaznicki.bzBuzz.common.Status;
 import com.zelaznicki.bzBuzz.post.Post;
 import com.zelaznicki.bzBuzz.user.User;
 import jakarta.persistence.LockModeType;
@@ -24,6 +25,9 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
     List<Comment> findAllByParentOrderByCreatedAtAsc(Comment parent);
     List<Comment> findAllByUser(User user);
     List<Comment> findAllByPostAndParentIsNotNullOrderByCreatedAtAsc(Post post);
+
+    @Query("SELECT c.post.id, COUNT(c) FROM Comment c WHERE c.post IN :posts AND c.status = :status GROUP BY c.post.id")
+    List<Object[]> countByPostsAndStatus(@Param("posts") List<Post> posts, @Param("status") Status status);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c from Comment c WHERE c.id = :id")
