@@ -93,7 +93,7 @@
                             <span class="meta-divider">·</span>
                             <a class="post-comment-count"
                                th:href="@{/b/{name}/posts/{slug}(name=${board.name},slug=${post.slug})}"
-                               th:text="${commentCounts[post.id] ?: 0} + ' comments'">
+                               th:text="${(commentCounts[post.id] ?: 0)} + ' ' + ${(commentCounts[post.id] ?: 0) == 1 ? 'comment' : 'comments'}">
                             </a>
                         </div>
 
