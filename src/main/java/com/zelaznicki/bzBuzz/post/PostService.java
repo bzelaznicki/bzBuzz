@@ -335,7 +335,7 @@ public class PostService {
     }
 
     public Map<UUID, Long> getCommentCounts(List<Post> posts) {
-        if (posts.isEmpty()) {
+        if (posts == null || posts.isEmpty()) {
             return Map.of();
         }
         return commentRepository.countByPostsAndStatus(posts, Status.ENABLED).stream()
