@@ -2,6 +2,7 @@ package com.zelaznicki.bzBuzz.post;
 
 import com.zelaznicki.bzBuzz.board.Board;
 import com.zelaznicki.bzBuzz.board.BoardService;
+import com.zelaznicki.bzBuzz.comment.CommentRepository;
 import com.zelaznicki.bzBuzz.common.PostSort;
 import com.zelaznicki.bzBuzz.common.ResourceNotFoundException;
 import com.zelaznicki.bzBuzz.common.Status;
@@ -25,6 +26,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final PostVoteRepository postVoteRepository;
+    private final CommentRepository commentRepository;
     private final BoardService boardService;
 
     private static final int UPVOTE = 1;
@@ -330,6 +332,15 @@ public class PostService {
         return postVoteRepository.findByPostAndUser(post, user)
                 .map(v -> Map.of(post.getId(), v.getVoteType()))
                 .orElse(Map.of());
+    }
+
+    public Map<UUID, Long> getCommentCounts(Page<Post> posts) {
+        List<Post> postsList = posts.getContent();
+        return commentRepository.countByPostsAndStatus(postsList, Status.ENABLED).stream()
+                .collect(Collectors.toMap(
+                        row -> (UUID) row[0],
+                        row -> (Long) row[1]
+                ));
     }
 
     /**
