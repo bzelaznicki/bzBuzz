@@ -334,9 +334,8 @@ public class PostService {
                 .orElse(Map.of());
     }
 
-    public Map<UUID, Long> getCommentCounts(Page<Post> posts) {
-        List<Post> postsList = posts.getContent();
-        return commentRepository.countByPostsAndStatus(postsList, Status.ENABLED).stream()
+    public Map<UUID, Long> getCommentCounts(List<Post> posts) {
+        return commentRepository.countByPostsAndStatus(posts, Status.ENABLED).stream()
                 .collect(Collectors.toMap(
                         row -> (UUID) row[0],
                         row -> (Long) row[1]

@@ -86,13 +86,17 @@ public class BoardController {
         boolean isMember = user != null && boardService.isMember(board, user);
 
 
+
         model.addAttribute("board", board);
 
         model.addAttribute("isMember", isMember);
 
         Page<Post> posts = postService.findByBoard(board, sort, page);
 
+        Map<UUID, Long> commentCounts = postService.getCommentCounts(posts.getContent());
+
         model.addAttribute("posts", posts);
+        model.addAttribute("commentCounts", commentCounts);
         model.addAttribute("currentPage", posts.getNumber());
         model.addAttribute("currentSort", sort);
         model.addAttribute("totalPages", posts.getTotalPages());
