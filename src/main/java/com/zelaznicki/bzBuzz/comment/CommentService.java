@@ -7,6 +7,9 @@ import com.zelaznicki.bzBuzz.post.Post;
 import com.zelaznicki.bzBuzz.post.VoteResponse;
 import com.zelaznicki.bzBuzz.user.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +30,7 @@ public class CommentService {
 
     private static final int UPVOTE = 1;
     private static final int DOWNVOTE = -1;
+    private static final int PAGE_SIZE = 25;
 
     private static void requireAuthenticated(User user) {
         if (user == null) {
@@ -168,6 +172,15 @@ public class CommentService {
                         cv -> cv.getComment().getId(),
                         CommentVote::getVoteType
                 ));
+    }
+
+    public Page<Comment> findByUser(User user, PostSort sort, int page) {
+        Pageable pageable = PageRequest.of(page, PAGE_SIZE);
+        return switch (sort) {
+            case NEW -> commentRepository.findAllByUserAndStatusOrderByCreatedAtDesc(user, Status.ENABLED, pageable);
+            case TOP -> commentRepository.findAllByUserAndStatusOrderByVoteScoreDesc(user, Status.ENABLED, pageable);
+            default -> throw new IllegalArgumentException("Invalid sort parameter");
+        };
     }
 
     public Comment getComment(UUID commentId) {

@@ -1,5 +1,7 @@
 package com.zelaznicki.bzBuzz.user;
 
+import com.zelaznicki.bzBuzz.comment.Comment;
+import com.zelaznicki.bzBuzz.comment.CommentService;
 import com.zelaznicki.bzBuzz.common.PostSort;
 import com.zelaznicki.bzBuzz.post.Post;
 import com.zelaznicki.bzBuzz.post.PostService;
@@ -22,13 +24,16 @@ public class UserController {
 
     private final UserService userService;
     private final PostService postService;
+    private final CommentService commentService;
 
     @GetMapping("/u/{name}")
     public String userProfilePage(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable String name,
-            @RequestParam(defaultValue = "NEW") PostSort sort,
-            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "NEW") PostSort postSort,
+            @RequestParam(defaultValue = "NEW") PostSort commentSort,
+            @RequestParam(defaultValue = "0")  int postPage,
+            @RequestParam(defaultValue = "0") int commentPage,
             Model model
             ) {
 
@@ -36,18 +41,22 @@ public class UserController {
 
         User user = userService.findByUsername(name);
 
-        Page<Post> posts = postService.findByUser(user, sort, page);
-
+        Page<Post> posts = postService.findByUser(user, postSort, postPage);
         Map<UUID, Long> commentCounts = postService.getCommentCounts(posts.getContent());
 
+        Page<Comment> userComments = commentService.findByUser(user, commentSort, commentPage);
 
         model.addAttribute("currentUser", currentUser);
         model.addAttribute("user", user);
         model.addAttribute("posts", posts);
         model.addAttribute("commentCounts", commentCounts);
-        model.addAttribute("currentPage", posts.getNumber());
-        model.addAttribute("totalPages", posts.getTotalPages());
-        model.addAttribute("currentSort", sort);
+        model.addAttribute("currentPostPage", posts.getNumber());
+        model.addAttribute("totalPostPages", posts.getTotalPages());
+        model.addAttribute("currentPostSort", postSort);
+        model.addAttribute("userComments", userComments);
+        model.addAttribute("currentCommentPage", userComments.getNumber());
+        model.addAttribute("totalCommentPages",  userComments.getTotalPages());
+        model.addAttribute("currentCommentSort", commentSort);;
 
         return "user/profile";
     }
