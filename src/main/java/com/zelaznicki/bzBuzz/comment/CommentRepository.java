@@ -25,12 +25,14 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
     List<Comment> findAllByPostAndParentIsNullOrderByVoteScoreDesc(Post post);
     List<Comment> findAllByPostAndParentIsNullOrderByCreatedAtDesc(Post post);
     List<Comment> findAllByParentOrderByCreatedAtAsc(Comment parent);
-    /**
- * Fetches all comments authored by the given user.
- *
- * @param user the author whose comments should be retrieved
- * @return a list of comments authored by the specified user
- */
+/**
+      * Fetches paginated comments authored by the given user and filtered by status.
+      *
+      * @param user the author whose comments should be retrieved
+      * @param status the comment status filter
+      * @param pageable pagination information
+      * @return a page of comments authored by the specified user
+      */
 Page<Comment> findAllByUserAndStatusOrderByVoteScoreDesc(User user, Status status, Pageable pageable);
 Page<Comment> findAllByUserAndStatusOrderByCreatedAtDesc(User user, Status status, Pageable pageable);
     /**
