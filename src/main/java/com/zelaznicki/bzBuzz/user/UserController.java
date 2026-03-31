@@ -48,7 +48,8 @@ public class UserController {
         model.addAttribute("user", user);
         model.addAttribute("tab", tab);
 
-        if (tab.equals("posts")) {
+        if (tab.equals("posts") || (!tab.equals("comments") && !tab.equals("boards"))) {
+            model.addAttribute("tab", "posts");
             Page<Post> posts = postService.findByUser(user, postSort, postPage);
             Map<UUID, Long> commentCounts = postService.getCommentCounts(posts.getContent());
             model.addAttribute("posts", posts);
@@ -58,6 +59,9 @@ public class UserController {
             model.addAttribute("currentPostSort", postSort);
 
         } else if (tab.equals("comments")) {
+            if (commentSort == PostSort.UPDATED) {
+                commentSort = PostSort.NEW;
+            }
             Page<Comment> comments = commentService.findByUser(user, commentSort, commentPage);
             model.addAttribute("userComments", comments);
             model.addAttribute("currentCommentPage", comments.getNumber());
