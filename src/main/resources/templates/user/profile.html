@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="'u/' + ${user.username}">Profile</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+  <div class="user-header">
+    <div class="user-header-info">
+      <h1 class="user-header-title" th:text="'u/' + ${user.username}"></h1>
+      <div class="user-meta">
+        <span th:text="'Member since ' + ${#temporals.format(user.createdAt, 'MMM d, yyyy')}"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="user-content">
+
+    <div class="profile-tabs">
+      <a th:href="@{/u/{name}(name=${user.username}, tab='posts', postSort=${currentPostSort ?: 'NEW'}, postPage=${currentPostPage ?: 0})}"
+         th:classappend="${tab == 'posts'} ? ' active' : ''"
+         class="sort-tab">Posts</a>
+      <a th:href="@{/u/{name}(name=${user.username}, tab='comments', commentSort=${currentCommentSort ?: 'NEW'}, commentPage=${currentCommentPage ?: 0})}"
+         th:classappend="${tab == 'comments'} ? ' active' : ''"
+         class="sort-tab">Comments</a>
+      <a th:href="@{/u/{name}(name=${user.username}, tab='boards')}"
+         th:classappend="${tab == 'boards'} ? ' active' : ''"
+         class="sort-tab">Boards</a>
+    </div>
+
+    <!-- Posts tab -->
+    <div th:if="${tab == 'posts'}">
+      <div class="sort-tabs">
+        <a th:href="@{/u/{name}(name=${user.username}, tab='posts', postSort='TOP', postPage=0)}"
+           th:classappend="${currentPostSort.name() == 'TOP'} ? ' active' : ''"
+           class="sort-tab">Top</a>
+        <a th:href="@{/u/{name}(name=${user.username}, tab='posts', postSort='NEW', postPage=0)}"
+           th:classappend="${currentPostSort.name() == 'NEW'} ? ' active' : ''"
+           class="sort-tab">New</a>
+        <a th:href="@{/u/{name}(name=${user.username}, tab='posts', postSort='UPDATED', postPage=0)}"
+           th:classappend="${currentPostSort.name() == 'UPDATED'} ? ' active' : ''"
+           class="sort-tab">Updated</a>
+      </div>
+
+      <div th:if="${posts.content.empty}" class="empty-state">
+        <p>No posts yet.</p>
+      </div>
+
+      <div th:unless="${posts.content.empty}" class="post-list">
+        <div th:each="post : ${posts.content}" class="post-card">
+          <div class="post-content">
+            <div class="post-meta">
+              <a th:href="@{/b/{name}(name=${post.board.name})}"
+                 th:text="'b/' + ${post.board.name}"
+                 class="post-board-link"></a>
+              <span class="post-type-badge"
+                    th:text="${post.postType}"
+                    th:classappend="${post.postType.name() == 'URL'} ? ' badge-url' : ' badge-text'"></span>
+              <span class="post-score" th:text="${post.voteScore} + ' points'"></span>
+              <span class="meta-divider">·</span>
+              <span class="post-date" th:text="${#temporals.format(post.createdAt, 'MMM d, yyyy')}"></span>
+              <span class="meta-divider">·</span>
+              <a class="post-comment-count"
+                 th:href="@{/b/{name}/posts/{slug}(name=${post.board.name},slug=${post.slug})}"
+                 th:text="${commentCounts[post.id] ?: 0} + ' comments'"></a>
+            </div>
+            <a class="post-title"
+               th:href="@{/b/{name}/posts/{slug}(name=${post.board.name},slug=${post.slug})}"
+               th:text="${post.title}"></a>
+            <div th:if="${post.postType.name() == 'URL'}" class="post-url">
+              <a th:if="${post.url != null and (post.url.startsWith('https://') or post.url.startsWith('http://'))}"
+                 th:href="${post.url}"
+                 th:text="${post.url}"
+                 target="_blank"
+                 rel="noopener noreferrer"></a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pagination" th:if="${totalPostPages > 1}">
+        <a th:if="${currentPostPage > 0}"
+           th:href="@{/u/{name}(name=${user.username}, tab='posts', postPage=${currentPostPage - 1}, postSort=${currentPostSort})}"
+           class="btn btn-ghost btn-sm">← Previous</a>
+        <span class="pagination-info"
+              th:text="${currentPostPage + 1} + ' / ' + ${totalPostPages}"></span>
+        <a th:if="${currentPostPage + 1 < totalPostPages}"
+           th:href="@{/u/{name}(name=${user.username}, tab='posts', postPage=${currentPostPage + 1}, postSort=${currentPostSort})}"
+           class="btn btn-ghost btn-sm">Next →</a>
+      </div>
+    </div>
+
+    <!-- Comments tab -->
+    <div th:if="${tab == 'comments'}">
+      <div class="sort-tabs">
+        <a th:href="@{/u/{name}(name=${user.username}, tab='comments', commentSort='TOP', commentPage=0)}"
+           th:classappend="${currentCommentSort != null and currentCommentSort.name() == 'TOP'} ? ' active' : ''"
+           class="sort-tab">Top</a>
+        <a th:href="@{/u/{name}(name=${user.username}, tab='comments', commentSort='NEW', commentPage=0)}"
+           th:classappend="${currentCommentSort != null and currentCommentSort.name() == 'NEW'} ? ' active' : ''"
+           class="sort-tab">New</a>
+      </div>
+
+      <div th:if="${userComments.content.empty}" class="empty-state">
+        <p>No comments yet.</p>
+      </div>
+
+      <div th:unless="${userComments.content.empty}" class="comment-list">
+        <div th:each="comment : ${userComments.content}" class="post-card">
+          <div class="post-content">
+            <div class="post-meta">
+              <a th:href="@{/b/{board}/posts/{slug}(board=${comment.post.board.name},slug=${comment.post.slug})}"
+                 th:text="'on: ' + ${comment.post.title}"
+                 class="post-board-link"></a>
+              <span class="meta-divider">·</span>
+              <span class="post-score" th:text="${comment.voteScore} + ' points'"></span>
+              <span class="meta-divider">·</span>
+              <span class="post-date" th:text="${#temporals.format(comment.createdAt, 'MMM d, yyyy')}"></span>
+            </div>
+            <p class="comment-text"
+               th:if="${comment.status.name() == 'ENABLED'}"
+               th:text="${comment.body}"></p>
+            <p class="comment-text comment-deleted"
+               th:if="${comment.status.name() == 'DISABLED'}">[deleted]</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="pagination" th:if="${totalCommentPages > 1}">
+        <a th:if="${currentCommentPage > 0}"
+           th:href="@{/u/{name}(name=${user.username}, tab='comments', commentPage=${currentCommentPage - 1}, commentSort=${currentCommentSort})}"
+           class="btn btn-ghost btn-sm">← Previous</a>
+        <span class="pagination-info"
+              th:text="${currentCommentPage + 1} + ' / ' + ${totalCommentPages}"></span>
+        <a th:if="${currentCommentPage + 1 < totalCommentPages}"
+           th:href="@{/u/{name}(name=${user.username}, tab='comments', commentPage=${currentCommentPage + 1}, commentSort=${currentCommentSort})}"
+           class="btn btn-ghost btn-sm">Next →</a>
+      </div>
+    </div>
+
+    <!-- Boards tab -->
+    <div th:if="${tab == 'boards'}">
+      <div th:if="${boards.empty}" class="empty-state">
+        <p>Not a member of any boards yet.</p>
+        <a th:href="@{/}" class="btn btn-primary btn-sm">Browse boards</a>
+      </div>
+
+      <div th:unless="${boards.empty}" class="board-list">
+        <div th:each="member : ${boards}" class="board-card">
+          <div class="board-card-body">
+            <a th:href="@{/b/{name}(name=${member.board.name})}"
+               th:text="'b/' + ${member.board.name}"
+               class="board-card-title"></a>
+            <p class="board-card-description"
+               th:text="${member.board.description} ?: 'No description'"
+               th:classappend="${member.board.description == null} ? 'muted' : ''"></p>
+          </div>
+          <div class="board-card-meta">
+            <span class="board-card-members" th:text="${member.board.memberCount} + ' members'"></span>
+            <span class="badge"
+                  th:text="${member.role}"
+                  th:classappend="${member.role.name() == 'MODERATOR'} ? ' badge-moderator' : ' badge-member'"></span>
+            <span class="meta-divider">·</span>
+            <span class="post-date" th:text="'Joined ' + ${#temporals.format(member.createdAt, 'MMM d, yyyy')}"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

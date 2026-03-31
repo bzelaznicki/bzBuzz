@@ -49,9 +49,11 @@
     <div class="comment-body">
 
         <div class="comment-meta">
-            <span class="comment-author"
-                  th:text="${comment.user != null ? 'u/' + comment.user.username : '[deleted]'}">
-            </span>
+            <a th:if="${comment.user != null}"
+               th:href="@{/u/{name}(name=${comment.user.username})}"
+               th:text="'u/' + ${comment.user.username}"
+               class="comment-author"></a>
+            <span th:if="${comment.user == null}" class="comment-author">[deleted]</span>
             <span class="meta-divider">·</span>
             <span class="comment-date"
                   th:text="${#temporals.format(comment.createdAt, 'MMM d, yyyy')}">

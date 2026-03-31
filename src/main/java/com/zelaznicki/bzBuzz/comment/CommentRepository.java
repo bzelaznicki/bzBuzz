@@ -4,6 +4,8 @@ import com.zelaznicki.bzBuzz.common.Status;
 import com.zelaznicki.bzBuzz.post.Post;
 import com.zelaznicki.bzBuzz.user.User;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
@@ -23,13 +25,16 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
     List<Comment> findAllByPostAndParentIsNullOrderByVoteScoreDesc(Post post);
     List<Comment> findAllByPostAndParentIsNullOrderByCreatedAtDesc(Post post);
     List<Comment> findAllByParentOrderByCreatedAtAsc(Comment parent);
-    /**
- * Fetches all comments authored by the given user.
- *
- * @param user the author whose comments should be retrieved
- * @return a list of comments authored by the specified user
- */
-List<Comment> findAllByUser(User user);
+/**
+      * Fetches paginated comments authored by the given user and filtered by status.
+      *
+      * @param user the author whose comments should be retrieved
+      * @param status the comment status filter
+      * @param pageable pagination information
+      * @return a page of comments authored by the specified user
+      */
+Page<Comment> findAllByUserAndStatusOrderByVoteScoreDesc(User user, Status status, Pageable pageable);
+Page<Comment> findAllByUserAndStatusOrderByCreatedAtDesc(User user, Status status, Pageable pageable);
     /**
  * Fetches child comments for the specified post, ordered by creation time ascending.
  *
@@ -37,6 +42,7 @@ List<Comment> findAllByUser(User user);
  * @return the list of comments for the given post where `parent` is not null, sorted by `createdAt` ascending
  */
 List<Comment> findAllByPostAndParentIsNotNullOrderByCreatedAtAsc(Post post);
+
 
     /**
      * Count comments with the given status for each post in the provided collection.

@@ -933,3 +933,58 @@ body {
     color: #1c1c1c;
     text-decoration: underline;
 }
+
+/* User profile */
+.user-header {
+    background: #fff;
+    border: 1px solid #edeff1;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.user-header-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.375rem;
+}
+
+.user-meta {
+    font-size: 0.875rem;
+    color: #878a8c;
+}
+
+.user-content {
+    max-width: 740px;
+    margin: 0 auto;
+}
+
+.profile-tabs {
+    display: flex;
+    border-bottom: 1px solid #edeff1;
+    margin-bottom: 1rem;
+}
+
+/* Badge variants */
+.badge-moderator {
+    background: #fff0ec;
+    color: #993c1d;
+    border: 1px solid #f5c4b3;
+}
+
+.badge-member {
+    background: #f6f7f8;
+    color: #576069;
+    border: 1px solid #edeff1;
+}
+
+.post-board-link {
+    color: #0079d3;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.post-board-link:hover {
+    text-decoration: underline;
+}

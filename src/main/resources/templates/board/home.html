@@ -83,9 +83,12 @@
                                   th:text="${post.postType}"
                                   th:classappend="${post.postType.name() == 'URL'} ? ' badge-url' : ' badge-text'">
                             </span>
-                            <span class="post-author"
-                                  th:text="${post.creator != null ? 'u/' + post.creator.username : '[deleted]'}">
-                            </span>
+                            <a th:if="${post.creator != null}"
+                               class="post-author"
+                               th:href="@{/u/{name}(name=${post.creator.username})}"
+                               th:text="'u/' + ${post.creator.username}">
+                            </a>
+                            <span th:if="${post.creator == null}" class="post-author">[deleted]</span>
                             <span class="meta-divider">·</span>
                             <span class="post-date"
                                   th:text="${#temporals.format(post.createdAt, 'MMM d, yyyy')}">
