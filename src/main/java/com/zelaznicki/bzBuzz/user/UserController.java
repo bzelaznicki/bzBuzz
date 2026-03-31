@@ -13,9 +13,11 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import jakarta.validation.constraints.Min;
 
 import java.util.List;
 import java.util.Map;
@@ -23,6 +25,7 @@ import java.util.UUID;
 
 @Controller
 @RequiredArgsConstructor
+@Validated
 public class UserController {
 
     private final UserService userService;
@@ -37,8 +40,8 @@ public class UserController {
             @RequestParam(defaultValue = "posts") String tab,
             @RequestParam(defaultValue = "NEW") PostSort postSort,
             @RequestParam(defaultValue = "NEW") PostSort commentSort,
-            @RequestParam(defaultValue = "0") int postPage,
-            @RequestParam(defaultValue = "0") int commentPage,
+            @RequestParam(defaultValue = "0") @Min(0) int postPage,
+            @RequestParam(defaultValue = "0") @Min(0) int commentPage,
             Model model
     ) {
         User currentUser = userService.findByUserDetails(userDetails);
