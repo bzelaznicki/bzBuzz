@@ -99,10 +99,10 @@
     <div th:if="${tab == 'comments'}">
       <div class="sort-tabs">
         <a th:href="@{/u/{name}(name=${user.username}, tab='comments', commentSort='TOP', commentPage=0)}"
-           th:classappend="${currentCommentSort.name() == 'TOP'} ? ' active' : ''"
+           th:classappend="${currentCommentSort != null and currentCommentSort.name() == 'TOP'} ? ' active' : ''"
            class="sort-tab">Top</a>
         <a th:href="@{/u/{name}(name=${user.username}, tab='comments', commentSort='NEW', commentPage=0)}"
-           th:classappend="${currentCommentSort.name() == 'NEW'} ? ' active' : ''"
+           th:classappend="${currentCommentSort != null and currentCommentSort.name() == 'NEW'} ? ' active' : ''"
            class="sort-tab">New</a>
       </div>
 
