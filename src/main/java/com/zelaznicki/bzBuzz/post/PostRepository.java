@@ -28,6 +28,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
  */
 Optional<Post> findBySlug(String slug);
 
+Page<Post> findByTitleContainingIgnoreCaseAndStatus(String query, Status status, Pageable pageable);
     /**
  * Finds posts within the specified board that have the specified status, ordered by creation time descending.
  *
