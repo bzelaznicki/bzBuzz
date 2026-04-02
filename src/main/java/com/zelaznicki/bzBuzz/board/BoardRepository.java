@@ -21,8 +21,8 @@ public interface BoardRepository extends JpaRepository<Board, UUID> {
     boolean existsByName(String name);
 
 
-    List<Board> findByNameContainingIgnoreCaseAndIsPrivateFalse(String query);
-    List<Board> findByDescriptionContainingIgnoreCaseAndIsPrivateFalse(String query);
+    @Query("SELECT b FROM Board b WHERE b.isPrivate = false AND (LOWER(b.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(b.description) LIKE LOWER(CONCAT('%', :query, '%')))")
+    List<Board> searchPublicBoards(@Param("query") String query);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT b FROM Board b WHERE b.id = :id")
