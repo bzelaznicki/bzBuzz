@@ -18,11 +18,19 @@
         <a th:href="@{/}" class="navbar-logo">bzBuzz</a>
 
         <div class="navbar-actions">
+            <div class="search-container">
+            <form th:action="@{/search}" method="get" class="navbar-search">
+                <input type="text" name="q" placeholder="Search bzBuzz..."
+                       th:value="${param.q}"
+                       class="search-input"/>
+                <button type="submit" class="btn btn-primary btn-sm">Search</button>
+            </form>
+            </div>
             <div sec:authorize="isAuthenticated()">
                 <span class="navbar-username"
                       sec:authentication="name">
                 </span>
-                <a th:href="@{/submit}" class="btn btn-primary btn-sm">New post</a>
+
                 <form th:action="@{/logout}" method="post" class="inline-form">
                     <button type="submit" class="btn btn-ghost btn-sm">Log out</button>
                 </form>
