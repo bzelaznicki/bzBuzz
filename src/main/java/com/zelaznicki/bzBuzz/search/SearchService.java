@@ -27,7 +27,7 @@ public class SearchService {
 
 
     public Page<Post> findPostsByTitle(String query, int page) {
-        if (query == null || query.isBlank()) return Page.empty();
+        if (query == null || query.isBlank() || page < 0) return Page.empty();
         return postRepository.findByTitleContainingIgnoreCaseAndStatus(query, Status.ENABLED, PageRequest.of(page, PAGE_SIZE));
     }
 }
