@@ -28,8 +28,8 @@ public class SearchController {
     @GetMapping("/search")
     public String searchResultsPage(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam String q,
-            @RequestParam @Min(0) int page,
+            @RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
             Model model
             ) {
         User currentUser = userService.findByUserDetails(userDetails);
