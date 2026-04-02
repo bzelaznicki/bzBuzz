@@ -59,7 +59,7 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(
                         auth -> auth
-                                .requestMatchers("/","/register", "/login",  "/css/**", "/js/**", "/images/**").permitAll()
+                                .requestMatchers("/","/register", "/login", "/search", "/css/**", "/js/**", "/images/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/b/create").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/b/**", "/u/*").permitAll()
                                 .requestMatchers(HttpMethod.POST,"/b/**").authenticated()
