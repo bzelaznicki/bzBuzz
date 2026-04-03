@@ -29,7 +29,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 Optional<Post> findBySlug(String slug);
 
     /**
-     * Searches for posts with a title containinng the given query string, case-insensitive, and have a specified status.
+     * Searches for posts with a title containing the given query string, case-insensitive, and have a specified status.
      * @param query the search term for titles
      * @param status the status to filter by (Status.ENABLED, Status.DISABLED)
      * @param pageable pagination
