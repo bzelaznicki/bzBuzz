@@ -20,6 +20,10 @@ public interface BoardRepository extends JpaRepository<Board, UUID> {
     List<Board> findByIsPrivateFalseOrderByMemberCountDesc();
     boolean existsByName(String name);
 
+
+    @Query("SELECT b FROM Board b WHERE b.isPrivate = false AND (LOWER(b.name) LIKE LOWER(CONCAT('%', :query, '%')) ESCAPE '\\' OR LOWER(b.description) LIKE LOWER(CONCAT('%', :query, '%')) ESCAPE '\\')")
+    List<Board> searchPublicBoards(@Param("query") String query);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT b FROM Board b WHERE b.id = :id")
     Optional<Board> findByIdForUpdate(@Param("id") UUID id);

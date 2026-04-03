@@ -29,6 +29,14 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 Optional<Post> findBySlug(String slug);
 
     /**
+     * Searches for posts with a title containing the given query string, case-insensitive, and have a specified status.
+     * @param query the search term for titles
+     * @param status the status to filter by (Status.ENABLED, Status.DISABLED)
+     * @param pageable pagination
+     * @return a page of posts matching the criteria.
+     */
+Page<Post> findByTitleContainingIgnoreCaseAndStatus(String query, Status status, Pageable pageable);
+    /**
  * Finds posts within the specified board that have the specified status, ordered by creation time descending.
  *
  * @param board  the board to filter posts by

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="'Search: ' + ${query}">Search</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <div class="page-header">
+        <h1 class="page-title" th:text="'Results for &quot;' + ${query} + '&quot;'"></h1>
+    </div>
+
+    <!-- Boards section -->
+    <div class="search-section">
+        <h2 class="section-title">Boards</h2>
+
+        <div th:if="${boards.empty}" class="empty-state">
+            <p>No boards found matching your search.</p>
+        </div>
+
+        <div th:unless="${boards.empty}" class="board-list">
+            <div th:each="board : ${boards}" class="board-card">
+                <div class="board-card-body">
+                    <a th:href="@{/b/{name}(name=${board.name})}"
+                       th:text="'b/' + ${board.name}"
+                       class="board-card-title"></a>
+                    <p class="board-card-description"
+                       th:text="${board.description} ?: 'No description'"
+                       th:classappend="${board.description == null} ? 'muted' : ''"></p>
+                </div>
+                <div class="board-card-meta">
+                    <span class="board-card-members" th:text="${board.memberCount} + ' members'"></span>
+                    <span th:if="${board.private}" class="badge badge-private">Private</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Posts section -->
+    <div class="search-section">
+        <h2 class="section-title">Posts</h2>
+
+        <div th:if="${posts.content.empty}" class="empty-state">
+            <p>No posts found matching your search.</p>
+        </div>
+
+        <div th:unless="${posts.content.empty}" class="post-list">
+            <div th:each="post : ${posts.content}" class="post-card">
+                <div class="post-content">
+                    <div class="post-meta">
+                        <a th:href="@{/b/{name}(name=${post.board.name})}"
+                           th:text="'b/' + ${post.board.name}"
+                           class="post-board-link"></a>
+                        <span class="meta-divider">·</span>
+                        <span class="post-type-badge"
+                              th:text="${post.postType}"
+                              th:classappend="${post.postType.name() == 'URL'} ? ' badge-url' : ' badge-text'"></span>
+                        <a th:if="${post.creator != null}"
+                           class="post-author"
+                           th:href="@{/u/{name}(name=${post.creator.username})}"
+                           th:text="'u/' + ${post.creator.username}"></a>
+                        <span th:if="${post.creator == null}" class="post-author">[deleted]</span>
+                        <span class="meta-divider">·</span>
+                        <span class="post-score" th:text="${post.voteScore} + ' points'"></span>
+                        <span class="meta-divider">·</span>
+                        <span class="post-date"
+                              th:text="${#temporals.format(post.createdAt, 'MMM d, yyyy')}"></span>
+                        <span class="meta-divider">·</span>
+                        <a class="post-comment-count"
+                           th:href="@{/b/{name}/posts/{slug}(name=${post.board.name},slug=${post.slug})}"
+                           th:text="${commentCounts[post.id] ?: 0} + ' comments'"></a>
+                    </div>
+
+                    <a class="post-title"
+                       th:href="@{/b/{name}/posts/{slug}(name=${post.board.name},slug=${post.slug})}"
+                       th:text="${post.title}"></a>
+
+                    <div th:if="${post.postType.name() == 'URL'}" class="post-url">
+                        <a th:if="${post.url != null and (post.url.startsWith('https://') or post.url.startsWith('http://'))}"
+                           th:href="${post.url}"
+                           th:text="${post.url}"
+                           target="_blank"
+                           rel="noopener noreferrer"></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pagination" th:if="${totalPages > 1}">
+            <a th:if="${currentPage > 0}"
+               th:href="@{/search(q=${query}, page=${currentPage - 1})}"
+               class="btn btn-ghost btn-sm">← Previous</a>
+            <span class="pagination-info"
+                  th:text="${currentPage + 1} + ' / ' + ${totalPages}"></span>
+            <a th:if="${currentPage + 1 < totalPages}"
+               th:href="@{/search(q=${query}, page=${currentPage + 1})}"
+               class="btn btn-ghost btn-sm">Next →</a>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
