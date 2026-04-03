@@ -105,7 +105,7 @@ Or via Maven:
 ```
 
 **5. Open in browser:**
-```
+```text
 http://localhost:8080
 ```
 
