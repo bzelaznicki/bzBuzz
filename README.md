@@ -41,7 +41,7 @@ A Reddit-style community platform built with Java and Spring Boot.
 
 **Soft deletes** — posts and comments are never hard deleted. Setting `status = DISABLED` preserves data integrity and mirrors Reddit's behaviour where deleted content shows as `[deleted]` while replies remain intact.
 
-**Async voting** — vote buttons fire a `fetch` POST to a REST endpoint (`/api/b/.../vote`) and update the score in place without a full page reload, while non-JS fallback forms are not provided (requires JS).
+**Async voting** — vote buttons fire a `fetch` POST to a REST endpoint (`/api/b/.../vote`) and update the score in place without a full-page reload, while non-JS fallback forms are not provided (requires JS).
 
 **Slug-based post URLs** — post URLs use a normalized title slug with a random 6-character suffix (e.g. `/b/java/posts/my-post-a1b2c3`) rather than UUIDs, making them human-readable and shareable.
 
