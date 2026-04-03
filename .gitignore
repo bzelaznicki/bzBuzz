@@ -59,4 +59,5 @@ build/
 .vscode/
 
 src/main/resources/application-local.yml
->>>>>>> b7f3ce6 (first setup)
+.DS_Store
+
