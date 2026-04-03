@@ -20,7 +20,8 @@
         <div class="navbar-actions">
             <div class="search-container">
             <form th:action="@{/search}" method="get" class="navbar-search">
-                <input type="text" name="q" placeholder="Search bzBuzz..."
+                <label for="search-input" class="hidden">Search</label>
+                <input id="search-input" aria-label="Search bzBuzz" type="text" name="q" placeholder="Search bzBuzz..."
                        th:value="${param.q}"
                        class="search-input"/>
                 <button type="submit" class="btn btn-primary btn-sm">Search</button>
