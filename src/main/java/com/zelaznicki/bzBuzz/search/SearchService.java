@@ -22,7 +22,10 @@ public class SearchService {
 
     public List<Board> searchBoards(String query) {
         if (query == null || query.isBlank()) return List.of();
-        return boardRepository.searchPublicBoards(query);
+        String escapedQuery = query.replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
+        return boardRepository.searchPublicBoards(escapedQuery);
     }
 
 
