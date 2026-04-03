@@ -1031,7 +1031,3 @@ body {
     display: flex;
     align-items: center;
 }
-
-.inline-form {
-    display: inline;
-}
