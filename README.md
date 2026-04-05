@@ -115,6 +115,7 @@ Flyway will run all migrations automatically on startup.
 
 - REST API layer for React frontend migration
 - Moderator actions (remove posts/comments from boards)
+- Board invites
 - Email verification on registration
 - Password reset flow
 - Full-text search with Postgres `tsvector`
