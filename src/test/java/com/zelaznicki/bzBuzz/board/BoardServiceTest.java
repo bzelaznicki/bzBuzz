@@ -1,19 +1,30 @@
 package com.zelaznicki.bzBuzz.board;
 
+import com.zelaznicki.bzBuzz.common.ResourceNotFoundException;
 import com.zelaznicki.bzBuzz.user.User;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
 import java.util.UUID;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class BoardServiceTest {
 
     @Mock
     private BoardRepository boardRepository;
+
+    @Mock
+    private BoardMemberRepository boardMemberRepository;
 
     @InjectMocks
     private BoardService boardService;
@@ -33,6 +44,55 @@ public class BoardServiceTest {
                 .id(UUID.randomUUID())
                 .createdBy(user)
                 .name("test")
+                .memberCount(1)
                 .build();
     }
+
+    @Test
+    void board_shouldThrowException_whenLeavingAsNotAMember() {
+
+        assertThrows(ResourceNotFoundException.class, () ->
+                boardService.removeMemberFromBoard(board, user));
+    }
+
+    @Test
+    void board_shouldThrowException_whenLeavingAsLastModerator() {
+        BoardMember member = BoardMember.builder()
+                .id(UUID.randomUUID())
+                .board(board)
+                .user(user)
+                .role(MembershipRole.MODERATOR)
+                .build();
+
+        when(boardRepository.findByIdForUpdate(board.getId()))
+                .thenReturn(Optional.of(board));
+        when(boardMemberRepository.findByBoardAndUserForUpdate(board, user))
+                .thenReturn(Optional.of(member));
+        when(boardMemberRepository.countByBoardAndRole(board, MembershipRole.MODERATOR))
+                .thenReturn(1L);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                boardService.removeMemberFromBoard(board, user));
+    }
+
+    @Test
+    void board_shouldRemoveMemberAndDecrementMemberCount_whenRegularMemberLeaves() {
+        BoardMember member = BoardMember.builder()
+                .id(UUID.randomUUID())
+                .board(board)
+                .user(user)
+                .role(MembershipRole.MEMBER)
+                .build();
+
+        when(boardRepository.findByIdForUpdate(board.getId()))
+                .thenReturn(Optional.of(board));
+        when(boardMemberRepository.findByBoardAndUserForUpdate(board, user))
+                .thenReturn(Optional.of(member));
+
+        boardService.removeMemberFromBoard(board, user);
+
+        verify(boardMemberRepository).deleteByBoardAndUser(board, user);
+        verify(boardRepository).decrementMemberCount(board.getId());
+    }
+
 }
