@@ -95,4 +95,38 @@ public class BoardServiceTest {
         verify(boardRepository).decrementMemberCount(board.getId());
     }
 
+    @Test
+    void board_shouldRemoveModeratorAndDecrementMemberCount_whenMoreThanOneModeratorExists() {
+        BoardMember member = BoardMember.builder()
+                .id(UUID.randomUUID())
+                .board(board)
+                .user(user)
+                .role(MembershipRole.MODERATOR)
+                .build();
+        when(boardRepository.findByIdForUpdate(board.getId()))
+                .thenReturn(Optional.of(board));
+        when(boardMemberRepository.findByBoardAndUserForUpdate(board, user))
+                .thenReturn(Optional.of(member));
+
+
+
+        User otherModeratorUser = User.builder()
+                .id(UUID.randomUUID())
+                .username("othermod")
+                .email("othermod@example.com")
+                .build();
+        BoardMember otherModeratorMember = BoardMember.builder()
+                .id(UUID.randomUUID())
+                .board(board)
+                .user(otherModeratorUser)
+                .role(MembershipRole.MODERATOR)
+                .build();
+        when(boardMemberRepository.countByBoardAndRole(board, MembershipRole.MODERATOR))
+                .thenReturn(2L);
+
+        boardService.removeMemberFromBoard(board, user);
+
+        verify(boardMemberRepository).deleteByBoardAndUser(board, user);
+        verify(boardRepository).decrementMemberCount(board.getId());
+    }
 }
