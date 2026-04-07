@@ -108,19 +108,6 @@ public class BoardServiceTest {
         when(boardMemberRepository.findByBoardAndUserForUpdate(board, user))
                 .thenReturn(Optional.of(member));
 
-
-
-        User otherModeratorUser = User.builder()
-                .id(UUID.randomUUID())
-                .username("othermod")
-                .email("othermod@example.com")
-                .build();
-        BoardMember otherModeratorMember = BoardMember.builder()
-                .id(UUID.randomUUID())
-                .board(board)
-                .user(otherModeratorUser)
-                .role(MembershipRole.MODERATOR)
-                .build();
         when(boardMemberRepository.countByBoardAndRole(board, MembershipRole.MODERATOR))
                 .thenReturn(2L);
 
@@ -128,5 +115,67 @@ public class BoardServiceTest {
 
         verify(boardMemberRepository).deleteByBoardAndUser(board, user);
         verify(boardRepository).decrementMemberCount(board.getId());
+    }
+
+    @Test
+    void board_shouldThrowException_whenDemotingTheLastModerator() {
+        BoardMember member = BoardMember.builder()
+                .id(UUID.randomUUID())
+                .board(board)
+                .user(user)
+                .role(MembershipRole.MODERATOR)
+                .build();
+
+        when(boardRepository.findByIdForUpdate(board.getId()))
+                .thenReturn(Optional.of(board));
+        when(boardMemberRepository.findByBoardAndUserForUpdate(board, user))
+                .thenReturn(Optional.of(member));
+        when(boardMemberRepository.countByBoardAndRole(board, MembershipRole.MODERATOR))
+                .thenReturn(1L);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                boardService.changeMemberRole(board, user, MembershipRole.MEMBER));
+    }
+
+    @Test
+    void board_shouldDemoteModerator_whenMoreThanOneModeratorExists() {
+        BoardMember member = BoardMember.builder()
+                .id(UUID.randomUUID())
+                .board(board)
+                .user(user)
+                .role(MembershipRole.MODERATOR)
+                .build();
+
+        when(boardRepository.findByIdForUpdate(board.getId()))
+                .thenReturn(Optional.of(board));
+        when(boardMemberRepository.findByBoardAndUserForUpdate(board, user))
+                .thenReturn(Optional.of(member));
+        when(boardMemberRepository.countByBoardAndRole(board, MembershipRole.MODERATOR))
+                .thenReturn(2L);
+
+        boardService.changeMemberRole(board, user, MembershipRole.MEMBER);
+
+        assertThat(member.getRole()).isEqualTo(MembershipRole.MEMBER);
+        verify(boardMemberRepository).save(member);
+    }
+
+    @Test
+    void board_shouldPromoteMemberToModerator() {
+        BoardMember member = BoardMember.builder()
+                .id(UUID.randomUUID())
+                .board(board)
+                .user(user)
+                .role(MembershipRole.MEMBER)
+                .build();
+
+        when(boardRepository.findByIdForUpdate(board.getId()))
+                .thenReturn(Optional.of(board));
+        when(boardMemberRepository.findByBoardAndUserForUpdate(board, user))
+                .thenReturn(Optional.of(member));
+
+        boardService.changeMemberRole(board, user, MembershipRole.MODERATOR);
+
+        assertThat(member.getRole()).isEqualTo(MembershipRole.MODERATOR);
+        verify(boardMemberRepository).save(member);
     }
 }
