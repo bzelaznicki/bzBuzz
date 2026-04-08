@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -52,7 +53,12 @@ public class BoardServiceTest {
     @Test
     void board_shouldThrowException_whenLeavingAsNotAMember() {
 
-        assertThrows(ResourceNotFoundException.class, () ->
+        when(boardMemberRepository.findByBoardAndUserForUpdate(board,user))
+                .thenReturn(Optional.empty());
+        when(boardRepository.findByIdForUpdate(board.getId()))
+                .thenReturn(Optional.of(board));
+
+        assertThrows(AccessDeniedException.class, () ->
                 boardService.removeMemberFromBoard(board, user));
     }
 
@@ -194,6 +200,8 @@ public class BoardServiceTest {
     @Test
     void board_shouldThrowException_whenJoiningPrivateBoard() {
         board.setPrivate(true);
+        when(boardMemberRepository.existsByBoardAndUser(board,user))
+                .thenReturn(false);
         assertThrows(IllegalArgumentException.class, () ->
                 boardService.joinBoard(board,user));
     }
@@ -211,5 +219,39 @@ public class BoardServiceTest {
         verify(boardRepository).incrementMemberCount(board.getId());
     }
 
-    
+    @Test
+    void board_shouldThrowException_whenCreatedBoardNameIsInvalid() {
+        assertThrows(IllegalArgumentException.class, () ->
+                boardService.create("aN!inv4l1dN4m€", "This won't work", "", user, false));
+    }
+
+    @Test
+    void board_shouldThrowException_whenCreatedBoardNameIsEmpty() {
+        assertThrows(IllegalArgumentException.class, () ->
+                boardService.create("", "", "", user, false));
+    }
+
+    @Test
+    void board_shouldThrowException_whenCreatedBoardNameIsNull() {
+        assertThrows(IllegalArgumentException.class, () ->
+                boardService.create(null, "This won't work", "", user, false));
+    }
+
+    @Test
+    void board_shouldThrowException_whenBoardNameAlreadyExists() {
+        when(boardRepository.existsByName(board.getName())).thenReturn(true);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                boardService.create("test", "This board already exists", "", user, false));
+    }
+
+    @Test
+    void board_shouldCreateBoardAndAddUserAsModerator_whenCreatingBoard() {
+        when(boardRepository.existsByName(board.getName())).thenReturn(false);
+
+        boardService.create(board.getName(), "This is a new board", "", user, false);
+
+        verify(boardRepository).save(any(Board.class));
+        verify(boardMemberRepository).save(any(BoardMember.class));
+    }
 }
