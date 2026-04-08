@@ -16,8 +16,7 @@ import java.util.UUID;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
@@ -114,9 +113,12 @@ class PostServiceTest {
     @Test
     void vote_shouldThrowException_whenInvalidVoteType() {
 
-        assertThrows(IllegalArgumentException.class, () ->
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
                 postService.vote(post, user, 0)
         );
+
+        assertThat(ex).hasMessage("Invalid vote");
+        verifyNoMoreInteractions(postRepository, postVoteRepository);
     }
 
     @Test
@@ -130,8 +132,12 @@ class PostServiceTest {
         when(postRepository.findByIdForUpdate(deletedPost.getId()))
                 .thenReturn(Optional.of(deletedPost));
 
-        assertThrows(IllegalArgumentException.class, () ->
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
                 postService.vote(deletedPost, user, 1)
         );
+
+        assertThat(ex).hasMessage("Post is deleted");
+        verifyNoInteractions(postVoteRepository);
+        verify(postRepository, never()).adjustVoteScore(deletedPost.getId(), 1);
     }
 }
