@@ -113,8 +113,6 @@ class PostServiceTest {
 
     @Test
     void vote_shouldThrowException_whenInvalidVoteType() {
-        when(postRepository.findByIdForUpdate(post.getId()))
-                .thenReturn(Optional.of(post));
 
         assertThrows(IllegalArgumentException.class, () ->
                 postService.vote(post, user, 0)
