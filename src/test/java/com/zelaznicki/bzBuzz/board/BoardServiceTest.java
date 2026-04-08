@@ -14,6 +14,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -178,4 +179,37 @@ public class BoardServiceTest {
         assertThat(member.getRole()).isEqualTo(MembershipRole.MODERATOR);
         verify(boardMemberRepository).save(member);
     }
+
+    @Test
+    void board_shouldThrowException_whenJoiningAlreadyJoinedBoard() {
+
+        when(boardMemberRepository.existsByBoardAndUser(board, user))
+                .thenReturn(true);
+
+
+        assertThrows(IllegalArgumentException.class, () ->
+                boardService.joinBoard(board, user));
+    }
+
+    @Test
+    void board_shouldThrowException_whenJoiningPrivateBoard() {
+        board.setPrivate(true);
+        assertThrows(IllegalArgumentException.class, () ->
+                boardService.joinBoard(board,user));
+    }
+
+    @Test
+    void board_shouldCreateMembershipAndIncrementMemberCount_whenJoiningBoard() {
+
+        when(boardMemberRepository.existsByBoardAndUser(board,user))
+                .thenReturn(false);
+
+
+        boardService.joinBoard(board, user);
+
+        verify(boardMemberRepository).save(any(BoardMember.class));
+        verify(boardRepository).incrementMemberCount(board.getId());
+    }
+
+    
 }
