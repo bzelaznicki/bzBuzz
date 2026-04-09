@@ -106,7 +106,7 @@ public class CommentServiceTest {
 
     @Test
     void comment_shouldThrowException_whenBodyIsNullOnNewComment() {
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> commentService.addComment(user, post, comment, null));
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> commentService.addComment(user, post, null, null));
         assertThat(ex).hasMessage("Comment body cannot be empty");
         verifyNoInteractions(commentRepository);
     }
@@ -207,6 +207,7 @@ public class CommentServiceTest {
     @Test
     void comment_shouldDeleteVote_whenVoteExists() {
         CommentVote vote = getCommentVote(1);
+        comment.setVoteScore(1);
 
         when(commentRepository.findByIdForUpdate(comment.getId()))
                 .thenReturn(Optional.of(comment));
@@ -216,7 +217,7 @@ public class CommentServiceTest {
 
         VoteResponse response = commentService.vote(comment, user, 1);
 
-        assertThat(response.voteScore()).isEqualTo(-1);
+        assertThat(response.voteScore()).isEqualTo(0);
         assertThat(response.action()).isEqualTo("unvoted");
 
         verify(commentVoteRepository).delete(vote);
@@ -226,6 +227,7 @@ public class CommentServiceTest {
     @Test
     void comment_shouldReplaceVote_whenChangingVoteType() {
         CommentVote vote = getCommentVote(-1);
+        comment.setVoteScore(-1);
 
         when(commentRepository.findByIdForUpdate(comment.getId()))
                 .thenReturn(Optional.of(comment));
@@ -234,7 +236,7 @@ public class CommentServiceTest {
 
         VoteResponse response = commentService.vote(comment, user, 1);
 
-        assertThat(response.voteScore()).isEqualTo(2);
+        assertThat(response.voteScore()).isEqualTo(1);
         assertThat(response.action()).isEqualTo("upvoted");
 
         verify(commentVoteRepository).save(vote);
