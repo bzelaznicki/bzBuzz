@@ -258,5 +258,66 @@ public class CommentServiceTest {
         verifyNoInteractions(commentVoteRepository);
     }
 
-    
+    @Test
+    void comment_shouldThrowException_whenUpdatedPostBodyIsEmpty() {
+        when(commentRepository.findByIdForUpdate(comment.getId()))
+            .thenReturn(Optional.of(comment));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> commentService.updateComment(user, comment, ""));
+        assertThat(ex).hasMessage("Comment body cannot be empty");
+    }
+
+    @Test
+    void comment_shouldThrowException_whenUpdatedPostBodyIsNull() {
+        when(commentRepository.findByIdForUpdate(comment.getId()))
+                .thenReturn(Optional.of(comment));
+
+        IllegalArgumentException ex =  assertThrows(IllegalArgumentException.class,
+                () -> commentService.updateComment(user, comment, null));
+
+        assertThat(ex).hasMessage("Comment body cannot be empty");
+    }
+
+    @Test
+    void comment_shouldThrowException_whenUserIsNotTheCommentOwner() {
+        User otherUser = User.builder()
+                .id(UUID.randomUUID())
+                .username("otheruser")
+                .email("other@example.com")
+                .build();
+        when(commentRepository.findByIdForUpdate(comment.getId()))
+        .thenReturn(Optional.of(comment));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> commentService.updateComment(otherUser, comment, "This is not mine!"));
+
+        assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(ex.getReason()).isEqualTo("You are not authorized to perform this action");
+    }
+
+    @Test
+    void comment_shouldThrowException_whenUpdatingDeletedComment() {
+        comment.setStatus(Status.DISABLED);
+        when(commentRepository.findByIdForUpdate(comment.getId()))
+            .thenReturn(Optional.of(comment));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> commentService.updateComment(user, comment, "I'm trying to update this")
+        );
+
+        assertThat(ex).hasMessage("Comment is deleted");
+    }
+
+    @Test
+    void comment_shouldUpdateComment_whenUserIsTheCommentOwnerAndCommmentIsEnabled() {
+        when(commentRepository.findByIdForUpdate(comment.getId()))
+            .thenReturn(Optional.of(comment));
+        String newContent = "This is an updated comment";
+        commentService.updateComment(user, comment, newContent);
+
+        verify(commentRepository).save(comment);
+        assertThat(comment.getBody()).isEqualTo(newContent);
+
+    }
 }
