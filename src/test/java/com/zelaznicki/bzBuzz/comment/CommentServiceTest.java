@@ -4,6 +4,7 @@ import com.zelaznicki.bzBuzz.board.Board;
 import com.zelaznicki.bzBuzz.common.Status;
 import com.zelaznicki.bzBuzz.post.Post;
 import com.zelaznicki.bzBuzz.post.PostType;
+import com.zelaznicki.bzBuzz.post.VoteResponse;
 import com.zelaznicki.bzBuzz.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,13 +15,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -38,6 +39,15 @@ public class CommentServiceTest {
     private User user;
     private Post post;
     private Board board;
+
+    private CommentVote getCommentVote(int delta) {
+        return CommentVote.builder()
+                .id(UUID.randomUUID())
+                .user(user)
+                .comment(comment)
+                .voteType(delta)
+                .build();
+    }
 
     @BeforeEach
     void setUp() {
@@ -168,4 +178,85 @@ public class CommentServiceTest {
                         c.getParent().getId().equals(comment.getId())
         ));
     }
+
+    @Test
+    void comment_shouldCreateNewVote_whenNoExistingVote() {
+        when(commentRepository.findByIdForUpdate(comment.getId()))
+                .thenReturn(Optional.of(comment));
+        when(commentVoteRepository.findByCommentAndUser(comment, user))
+                .thenReturn(Optional.empty());
+
+        VoteResponse response = commentService.vote(comment, user, 1);
+
+        assertThat(response.voteScore()).isEqualTo(1);
+        assertThat(response.action()).isEqualTo("upvoted");
+
+        verify(commentVoteRepository).saveAndFlush(any(CommentVote.class));
+        verify(commentRepository).adjustVoteScore(comment.getId(), 1);
+    }
+
+    @Test
+    void comment_shouldDeleteVote_whenVoteExists() {
+        CommentVote vote = getCommentVote(1);
+
+        when(commentRepository.findByIdForUpdate(comment.getId()))
+                .thenReturn(Optional.of(comment));
+
+        when(commentVoteRepository.findByCommentAndUser(comment, user))
+                .thenReturn(Optional.of(vote));
+
+        VoteResponse response = commentService.vote(comment, user, 1);
+
+        assertThat(response.voteScore()).isEqualTo(-1);
+        assertThat(response.action()).isEqualTo("unvoted");
+
+        verify(commentVoteRepository).delete(vote);
+        verify(commentRepository).adjustVoteScore(comment.getId(), -1);
+    }
+
+    @Test
+    void comment_shouldReplaceVote_whenChangingVoteType() {
+        CommentVote vote = getCommentVote(-1);
+
+        when(commentRepository.findByIdForUpdate(comment.getId()))
+                .thenReturn(Optional.of(comment));
+        when(commentVoteRepository.findByCommentAndUser(comment, user))
+                .thenReturn(Optional.of(vote));
+
+        VoteResponse response = commentService.vote(comment, user, 1);
+
+        assertThat(response.voteScore()).isEqualTo(2);
+        assertThat(response.action()).isEqualTo("upvoted");
+
+        verify(commentVoteRepository).save(vote);
+        verify(commentRepository).adjustVoteScore(comment.getId(), 2);
+    }
+
+    @Test
+    void comment_shouldThrowException_whenInvalidVoteIsCast() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> commentService.vote(comment,user,2)
+        );
+        assertThat(ex).hasMessage("Invalid vote");
+        verifyNoInteractions(commentRepository);
+        verifyNoInteractions(commentVoteRepository);
+    }
+
+    @Test
+    void comment_shouldThrowException_whenVotingOnDeletedComment() {
+        comment.setStatus(Status.DISABLED);
+        when(commentRepository.findByIdForUpdate(comment.getId()))
+        .thenReturn(Optional.of(comment));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> commentService.vote(comment, user, 1)
+        );
+
+        assertThat(ex).hasMessage("Comment is deleted");
+        verifyNoInteractions(commentVoteRepository);
+    }
+
+    
 }
