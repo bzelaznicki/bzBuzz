@@ -370,7 +370,7 @@ public class CommentServiceTest {
 
         commentService.deleteComment(user, comment);
 
-        assertThat(comment.getBody().equals("[deleted]"));
+        assertThat(comment.getBody()).isEqualTo("[deleted]");
         assertThat(comment.getStatus()).isEqualTo(Status.DISABLED);
 
         verify(commentRepository).save(comment);
