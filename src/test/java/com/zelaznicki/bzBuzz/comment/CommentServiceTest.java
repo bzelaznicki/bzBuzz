@@ -394,6 +394,6 @@ public class CommentServiceTest {
     @Test
     void comment_shouldReturnCorrectMethod_whenSortingCommentsByTop() {
         commentService.findParentCommentsByPost(post, PostSort.TOP);
-        verify(commentRepository).findAllByPostAndParentIsNullOrderByCreatedAtDesc(post);
+        verify(commentRepository).findAllByPostAndParentIsNullOrderByVoteScoreDesc(post);
     }
 }
