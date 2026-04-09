@@ -37,6 +37,7 @@ public class CommentServiceTest {
 
     private Comment comment;
     private User user;
+    private User otherUser;
     private Post post;
     private Board board;
 
@@ -48,6 +49,7 @@ public class CommentServiceTest {
                 .voteType(delta)
                 .build();
     }
+
 
     @BeforeEach
     void setUp() {
@@ -61,6 +63,12 @@ public class CommentServiceTest {
                 .createdBy(user)
                 .name("test")
                 .memberCount(1)
+                .build();
+
+        otherUser = User.builder()
+                .id(UUID.randomUUID())
+                .username("otheruser")
+                .email("other@example.com")
                 .build();
 
         post = Post.builder()
@@ -281,11 +289,6 @@ public class CommentServiceTest {
 
     @Test
     void comment_shouldThrowException_whenUserIsNotTheCommentOwner() {
-        User otherUser = User.builder()
-                .id(UUID.randomUUID())
-                .username("otheruser")
-                .email("other@example.com")
-                .build();
         when(commentRepository.findByIdForUpdate(comment.getId()))
         .thenReturn(Optional.of(comment));
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
@@ -310,7 +313,7 @@ public class CommentServiceTest {
     }
 
     @Test
-    void comment_shouldUpdateComment_whenUserIsTheCommentOwnerAndCommmentIsEnabled() {
+    void comment_shouldUpdateComment_whenUserIsTheCommentOwnerAndCommentIsEnabled() {
         when(commentRepository.findByIdForUpdate(comment.getId()))
             .thenReturn(Optional.of(comment));
         String newContent = "This is an updated comment";
@@ -319,5 +322,56 @@ public class CommentServiceTest {
         verify(commentRepository).save(comment);
         assertThat(comment.getBody()).isEqualTo(newContent);
 
+    }
+
+    @Test
+    void comment_shouldThrowException_whenDeletingCommentByADifferentUser() {
+        when(commentRepository.findByIdForUpdate(comment.getId()))
+                .thenReturn(Optional.of(comment));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+        () -> commentService.deleteComment(otherUser, comment));
+
+        assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(ex.getReason()).isEqualTo("You are not permitted to perform this action");
+    }
+
+    @Test
+    void comment_shouldThrowException_whenCommentOwnerIsNull() {
+        comment.setUser(null);
+        when(commentRepository.findByIdForUpdate(comment.getId()))
+                .thenReturn(Optional.of(comment));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> commentService.deleteComment(user, comment));
+
+        assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(ex.getReason()).isEqualTo("You are not permitted to perform this action");
+
+    }
+
+    @Test
+    void comment_shouldThrowException_whenCommentIsAlreadyDeleted() {
+        comment.setStatus(Status.DISABLED);
+
+        when(commentRepository.findByIdForUpdate(comment.getId()))
+                .thenReturn(Optional.of(comment));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> commentService.deleteComment(user, comment));
+
+        assertThat(ex).hasMessage("Comment is deleted");
+    }
+
+    @Test
+    void comment_shouldDeleteComment_whenUserIsTheCommentOwner() {
+        when(commentRepository.findByIdForUpdate(comment.getId()))
+                .thenReturn(Optional.of(comment));
+
+        commentService.deleteComment(user, comment);
+
+        assertThat(comment.getBody().equals("[deleted]"));
+        assertThat(comment.getStatus()).isEqualTo(Status.DISABLED);
+
+        verify(commentRepository).save(comment);
     }
 }
