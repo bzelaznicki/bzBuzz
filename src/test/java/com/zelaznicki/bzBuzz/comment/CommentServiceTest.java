@@ -1,6 +1,7 @@
 package com.zelaznicki.bzBuzz.comment;
 
 import com.zelaznicki.bzBuzz.board.Board;
+import com.zelaznicki.bzBuzz.common.PostSort;
 import com.zelaznicki.bzBuzz.common.Status;
 import com.zelaznicki.bzBuzz.post.Post;
 import com.zelaznicki.bzBuzz.post.PostType;
@@ -373,5 +374,26 @@ public class CommentServiceTest {
         assertThat(comment.getStatus()).isEqualTo(Status.DISABLED);
 
         verify(commentRepository).save(comment);
+    }
+
+    @Test
+    void comment_shouldThrowException_whenSortingCommentsByUpdated() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> commentService.findParentCommentsByPost(post, PostSort.UPDATED));
+
+        assertThat(ex).hasMessage("Comments can only be sorted by NEW or TOP");
+    }
+
+    @Test
+    void comment_shouldReturnCorrectMethod_whenSortingCommentsByNew() {
+        commentService.findParentCommentsByPost(post, PostSort.NEW);
+        verify(commentRepository).findAllByPostAndParentIsNullOrderByCreatedAtDesc(post);
+    }
+
+    @Test
+    void comment_shouldReturnCorrectMethod_whenSortingCommentsByTop() {
+        commentService.findParentCommentsByPost(post, PostSort.TOP);
+        verify(commentRepository).findAllByPostAndParentIsNullOrderByCreatedAtDesc(post);
     }
 }
