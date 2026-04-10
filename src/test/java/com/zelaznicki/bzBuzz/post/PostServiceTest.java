@@ -338,7 +338,7 @@ class PostServiceTest {
     }
 
     @Test
-    void post_shouldThrowException_whenPostIsNotFound() {
+    void post_shouldThrowException_whenDeletedPostIsNotFound() {
 
         ResourceNotFoundException ex = assertThrows(
                 ResourceNotFoundException.class,
@@ -358,6 +358,7 @@ class PostServiceTest {
         );
 
         assertThat(ex).hasMessage("You are not authorized to perform this action");
+        verifyNoMoreInteractions(postRepository);
     }
 
     @Test
@@ -373,5 +374,100 @@ class PostServiceTest {
         );
     }
 
-    
+    @Test
+    void post_shouldThrowException_whenUpdatedPostSlugIsEmpty() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.updatePost("", user, "New title", "Text", PostType.TEXT, null)
+        );
+
+        assertThat(ex).hasMessage("Slug cannot be empty");
+        verifyNoMoreInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldThrowException_whenUpdatedPostSlugIsNull() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () ->  postService.updatePost(null, user, "New title", "Text", PostType.TEXT, null)
+        );
+
+        assertThat(ex).hasMessage("Slug cannot be empty");
+        verifyNoMoreInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldThrowException_whenUpdatedPostIsNotFound() {
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
+                () -> postService.updatePost("new-title-1a2b3c", user, "New title", "Text", PostType.TEXT, null)
+        );
+
+        assertThat(ex).hasMessage("Post not found");
+    }
+
+    @Test
+    void post_shouldThrowException_whenUnauthorizedUserUpdatesPost() {
+        when(postRepository.findBySlugAndStatus(textPost.getSlug(), Status.ENABLED))
+        .thenReturn(Optional.of(textPost));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.updatePost(textPost.getSlug(),  otherUser, "New title", "Text", PostType.TEXT, null)
+        );
+        assertThat(ex).hasMessage("You are not authorized to perform this action");
+        verifyNoMoreInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldThrowException_whenPostHasNoOwnerOnUpdate() {
+        textPost.setCreator(null);
+        when(postRepository.findBySlugAndStatus(textPost.getSlug(), Status.ENABLED))
+                .thenReturn(Optional.of(textPost));
+
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.updatePost(textPost.getSlug(), otherUser, "New title", "Text", PostType.TEXT, null)
+        );
+
+        assertThat(ex).hasMessage("You are not authorized to perform this action");
+        verifyNoMoreInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldUpdatePost_whenTitleIsUpdated() {
+        String newTitle = "New title";
+        when(postRepository.findBySlugAndStatus(textPost.getSlug(), Status.ENABLED))
+                .thenReturn(Optional.of(textPost));
+
+        postService.updatePost(textPost.getSlug(), user, newTitle, null, PostType.TEXT, null);
+
+        verify(postRepository).save(argThat(p -> p.getTitle().equals(newTitle)));
+    }
+
+    @Test
+    void post_shouldUpdatePost_whenBodyIsUpdated() {
+        String newBody = "New body";
+        when(postRepository.findBySlugAndStatus(textPost.getSlug(), Status.ENABLED))
+        .thenReturn(Optional.of(textPost));
+
+        postService.updatePost(textPost.getSlug(), user, null, newBody, PostType.TEXT, null);
+
+        verify(postRepository).save(argThat(p -> p.getText().equals(newBody)));
+    }
+
+    @Test
+    void post_shouldThrowException_whenUrlIsEmptyOnPostUpdateToURL() {
+        when(postRepository.findBySlugAndStatus(textPost.getSlug(), Status.ENABLED))
+        .thenReturn(Optional.of(textPost));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.updatePost(textPost.getSlug(), user, null, null, PostType.URL, "")
+        );
+
+        assertThat(ex).hasMessage("URL posts must have a URL");
+        verifyNoMoreInteractions(postRepository);
+    }
 }
