@@ -1,5 +1,6 @@
 package com.zelaznicki.bzBuzz.post;
 
+import com.zelaznicki.bzBuzz.board.Board;
 import com.zelaznicki.bzBuzz.board.BoardService;
 import com.zelaznicki.bzBuzz.common.Status;
 import com.zelaznicki.bzBuzz.user.User;
@@ -30,7 +31,9 @@ class PostServiceTest {
     private PostService postService;
 
     private User user;
+    private User otherUser;
     private Post post;
+    private Board board;
 
     @BeforeEach
     void setUp() {
@@ -40,13 +43,24 @@ class PostServiceTest {
                 .email("test@example.com")
                 .build();
 
+        otherUser = User.builder()
+                .id(UUID.randomUUID())
+                .username("otherUser")
+                .email("other@example.com")
+                .build();
+
         post = Post.builder()
                 .id(UUID.randomUUID())
                 .voteScore(0)
                 .status(Status.ENABLED)
                 .build();
 
-
+        board = Board.builder()
+                .id(UUID.randomUUID())
+                .name("test")
+                .createdBy(user)
+                .isPrivate(false)
+                .build();
     }
 
     @Test
@@ -139,5 +153,144 @@ class PostServiceTest {
         assertThat(ex).hasMessage("Post is deleted");
         verifyNoInteractions(postVoteRepository);
         verify(postRepository, never()).adjustVoteScore(deletedPost.getId(), 1);
+    }
+
+    @Test
+    void post_shouldThrowException_whenTitleIsEmpty() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.create(user,board, "", "Content", PostType.TEXT, null));
+        assertThat(ex).hasMessage("Title cannot be empty");
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldThrowException_whenTitleIsNull() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.create(user,board, null, "Content", PostType.TEXT, null)
+        );
+        assertThat(ex).hasMessage("Title cannot be empty");
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldThrowException_whenTitleIsOver255Characters() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.create(user, board, "this title is over 255 characters, which means that it should be rejected. 255 characters is actually a lot of characters, so the user would really have to try to reach that limit. we should still test that this throws, otherwise we'd be getting into trouble", "The content is short, though", PostType.TEXT, null)
+        );
+
+        assertThat(ex).hasMessage("Title cannot exceed 255 characters");
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldThrowException_whenPostTypeIsTextAndTheBodyIsEmpty() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.create(user, board, "New Post", "", PostType.TEXT, null)
+        );
+
+        assertThat(ex).hasMessage("Text posts must have a body");
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldThrowException_whenPostTypeIsTextAndTheBodyIsNull() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.create(user, board, "New Post", null, PostType.TEXT, null)
+        );
+
+        assertThat(ex).hasMessage("Text posts must have a body");
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldThrowException_whenPostTypeIsURLAndTheURLIsEmpty() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.create(user, board, "New Post", null, PostType.URL, "")
+        );
+
+        assertThat(ex).hasMessage("URL posts must have a URL");
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldThrowException_whenPostTypeIsURLAndTheURLIsNull() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.create(user, board, "New Post", null, PostType.URL, null)
+        );
+
+        assertThat(ex).hasMessage("URL posts must have a URL");
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldThrowException_whenBothURLAndTextAreProvided() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.create(user, board, "New Post", "Hey, here's some text", PostType.TEXT, "https://example.com")
+        );
+
+        assertThat(ex).hasMessage("A post cannot have both text and a URL");
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldThrowException_whenURLIsJavaScript() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.create(user,board, "Cool new link", null, PostType.URL, "javascript:alert('Hello, world!')")
+        );
+
+        assertThat(ex).hasMessage("Invalid URL");
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldThrowException_whenURLIsData() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.create(user,board, "New Post", null, PostType.URL, "data:asdasd")
+        );
+
+        assertThat(ex).hasMessage("Invalid URL");
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldCreateTextPost_whenTextIsProvided() {
+        String postTitle = "New Post";
+        String postBody =  "Hey, here's some text";
+
+        postService.create(user, board, postTitle, postBody, PostType.TEXT, null);
+
+        verify(postRepository).save(argThat(p ->
+                        p.getTitle().equals(postTitle) &&
+                        p.getStatus() == Status.ENABLED &&
+                        p.getVoteScore() == 0 &&
+                        p.getUrl() == null &&
+                        p.getText().equals(postBody)
+        ));
+    }
+
+    @Test
+    void post_shouldCreateUrlPost_whenURLIsProvided() {
+        String postTitle = "New Post";
+        String postUrl =  "https://example.com";
+
+        postService.create(user, board, postTitle, null, PostType.URL, postUrl);
+
+        verify(postRepository).save(argThat(p ->
+                        p.getTitle().equals(postTitle) &&
+                        p.getStatus() == Status.ENABLED &&
+                        p.getVoteScore() == 0 &&
+                        p.getUrl().equals(postUrl) &&
+                        p.getText() == null
+                ));
     }
 }
