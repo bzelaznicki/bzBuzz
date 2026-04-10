@@ -34,7 +34,6 @@ class PostServiceTest {
     private User user;
     private User otherUser;
     private Post textPost;
-    private Post urlPost;
     private Board board;
 
     @BeforeEach
@@ -43,6 +42,13 @@ class PostServiceTest {
                 .id(UUID.randomUUID())
                 .username("testuser")
                 .email("test@example.com")
+                .build();
+
+        board = Board.builder()
+                .id(UUID.randomUUID())
+                .name("test")
+                .createdBy(user)
+                .isPrivate(false)
                 .build();
 
         otherUser = User.builder()
@@ -63,24 +69,6 @@ class PostServiceTest {
                 .postType(PostType.TEXT)
                 .build();
 
-        urlPost = Post.builder()
-                .id(UUID.randomUUID())
-                .voteScore(0)
-                .title("My Post")
-                .slug("my-post-1a2b3c")
-                .status(Status.ENABLED)
-                .creator(user)
-                .board(board)
-                .postType(PostType.URL)
-                .url("https://example.com")
-                .build();
-
-        board = Board.builder()
-                .id(UUID.randomUUID())
-                .name("test")
-                .createdBy(user)
-                .isPrivate(false)
-                .build();
     }
 
     @Test
@@ -469,5 +457,40 @@ class PostServiceTest {
 
         assertThat(ex).hasMessage("URL posts must have a URL");
         verifyNoMoreInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldThrowException_whenUrlIsNullOnPostUpdateToURL() {
+        when(postRepository.findBySlugAndStatus(textPost.getSlug(), Status.ENABLED))
+        .thenReturn(Optional.of(textPost));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.updatePost(textPost.getSlug(), user, null, null, PostType.URL, null)
+        );
+
+        assertThat(ex).hasMessage("URL posts must have a URL");
+        verifyNoMoreInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldThrowException_whenPostIsNotFoundBySlug() {
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
+                () -> postService.findByBoardAndSlug(board,"my-slug-1a2b3c")
+        );
+
+        assertThat(ex).hasMessage("Post not found");
+    }
+
+    @Test
+    void post_shouldReturnPost_whenSearchingBySlug() {
+        when(postRepository.findBySlugAndStatus(textPost.getSlug(), Status.ENABLED))
+                .thenReturn(Optional.of(textPost));
+
+        Post post = postService.findByBoardAndSlug(board, textPost.getSlug());
+
+        assertThat(post).isEqualTo(textPost);
+
     }
 }
