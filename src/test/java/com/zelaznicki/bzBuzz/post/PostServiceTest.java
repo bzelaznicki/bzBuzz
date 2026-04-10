@@ -2,6 +2,7 @@ package com.zelaznicki.bzBuzz.post;
 
 import com.zelaznicki.bzBuzz.board.Board;
 import com.zelaznicki.bzBuzz.board.BoardService;
+import com.zelaznicki.bzBuzz.common.ResourceNotFoundException;
 import com.zelaznicki.bzBuzz.common.Status;
 import com.zelaznicki.bzBuzz.user.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +33,8 @@ class PostServiceTest {
 
     private User user;
     private User otherUser;
-    private Post post;
+    private Post textPost;
+    private Post urlPost;
     private Board board;
 
     @BeforeEach
@@ -49,10 +51,28 @@ class PostServiceTest {
                 .email("other@example.com")
                 .build();
 
-        post = Post.builder()
+        textPost = Post.builder()
                 .id(UUID.randomUUID())
                 .voteScore(0)
+                .title("My Post")
+                .slug("my-post-1a2b3c")
                 .status(Status.ENABLED)
+                .creator(user)
+                .board(board)
+                .text("Here's some text")
+                .postType(PostType.TEXT)
+                .build();
+
+        urlPost = Post.builder()
+                .id(UUID.randomUUID())
+                .voteScore(0)
+                .title("My Post")
+                .slug("my-post-1a2b3c")
+                .status(Status.ENABLED)
+                .creator(user)
+                .board(board)
+                .postType(PostType.URL)
+                .url("https://example.com")
                 .build();
 
         board = Board.builder()
@@ -65,70 +85,70 @@ class PostServiceTest {
 
     @Test
     void vote_shouldCreateNewVote_whenNoExistingVote() {
-        when(postRepository.findByIdForUpdate(post.getId()))
-                .thenReturn(Optional.of(post));
-        when(postVoteRepository.findByPostAndUser(post, user))
+        when(postRepository.findByIdForUpdate(textPost.getId()))
+                .thenReturn(Optional.of(textPost));
+        when(postVoteRepository.findByPostAndUser(textPost, user))
                 .thenReturn(Optional.empty());
 
-        VoteResponse response = postService.vote(post, user, 1);
+        VoteResponse response = postService.vote(textPost, user, 1);
 
         assertThat(response.voteScore()).isEqualTo(1);
         assertThat(response.action()).isEqualTo("upvoted");
 
         verify(postVoteRepository).save(any(PostVote.class));
-        verify(postRepository).adjustVoteScore(post.getId(), 1);
+        verify(postRepository).adjustVoteScore(textPost.getId(), 1);
     }
 
     @Test
     void vote_shouldDeleteVote_whenExistingVote() {
         PostVote existingVote = PostVote.builder()
                 .id(UUID.randomUUID())
-                .post(post)
+                .post(textPost)
                 .user(user)
                 .voteType(1)
                 .build();
-        when(postRepository.findByIdForUpdate(post.getId()))
-                .thenReturn(Optional.of(post));
-        when(postVoteRepository.findByPostAndUser(post, user))
+        when(postRepository.findByIdForUpdate(textPost.getId()))
+                .thenReturn(Optional.of(textPost));
+        when(postVoteRepository.findByPostAndUser(textPost, user))
                 .thenReturn(Optional.of(existingVote));
 
-        VoteResponse response = postService.vote(post, user, 1);
+        VoteResponse response = postService.vote(textPost, user, 1);
 
         assertThat(response.voteScore()).isEqualTo(-1);
         assertThat(response.action()).isEqualTo("unvoted");
 
         verify(postVoteRepository).delete(existingVote);
-        verify(postRepository).adjustVoteScore(post.getId(), -1);
+        verify(postRepository).adjustVoteScore(textPost.getId(), -1);
     }
 
     @Test
     void vote_shouldSwitchVote_whenDifferentVoteTypeExists() {
         PostVote existingVote = PostVote.builder()
                 .id(UUID.randomUUID())
-                .post(post)
+                .post(textPost)
                 .user(user)
                 .voteType(-1)
                 .build();
 
-        when(postRepository.findByIdForUpdate(post.getId()))
-                .thenReturn(Optional.of(post));
-        when(postVoteRepository.findByPostAndUser(post, user))
+        when(postRepository.findByIdForUpdate(textPost.getId()))
+                .thenReturn(Optional.of(textPost));
+        when(postVoteRepository.findByPostAndUser(textPost, user))
                 .thenReturn(Optional.of(existingVote));
 
-        VoteResponse response = postService.vote(post, user, 1);
+        VoteResponse response = postService.vote(textPost, user, 1);
 
         assertThat(response.voteScore()).isEqualTo(2);
         assertThat(response.action()).isEqualTo("upvoted");
 
         verify(postVoteRepository).save(existingVote);
-        verify(postRepository).adjustVoteScore(post.getId(), 2);
+        verify(postRepository).adjustVoteScore(textPost.getId(), 2);
     }
 
     @Test
     void vote_shouldThrowException_whenInvalidVoteType() {
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
-                postService.vote(post, user, 0)
+                postService.vote(textPost, user, 0)
         );
 
         assertThat(ex).hasMessage("Invalid vote");
@@ -290,7 +310,68 @@ class PostServiceTest {
                         p.getStatus() == Status.ENABLED &&
                         p.getVoteScore() == 0 &&
                         p.getUrl().equals(postUrl) &&
-                        p.getText() == null
+                        p.getText() == null &&
+                        p.getSlug() != null
                 ));
     }
+
+    @Test
+    void post_shouldThrowException_whenDeletedSlugIsEmpty() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.deletePost("", user)
+        );
+
+        assertThat(ex).hasMessage("Slug cannot be empty");
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldThrowException_whenDeletedSlugIsNull() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.deletePost(null, user)
+        );
+
+        assertThat(ex).hasMessage("Slug cannot be empty");
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldThrowException_whenPostIsNotFound() {
+
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
+                () -> postService.deletePost("random-slug-1a2b3c", user)
+        );
+
+        assertThat(ex).hasMessage("Post not found");
+    }
+
+    @Test
+    void shouldThrowException_whenUnauthorizedUserDeletesPost() {
+        when(postRepository.findBySlugAndStatus(textPost.getSlug(), Status.ENABLED))
+                .thenReturn(Optional.of(textPost));
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.deletePost(textPost.getSlug(), otherUser)
+        );
+
+        assertThat(ex).hasMessage("You are not authorized to perform this action");
+    }
+
+    @Test
+    void shouldDeletePost_whenPostIsFoundAndDeletedByOwner() {
+        when(postRepository.findBySlugAndStatus(textPost.getSlug(), Status.ENABLED))
+        .thenReturn(Optional.of(textPost));
+        postService.deletePost(textPost.getSlug(), user);
+
+        verify(postRepository).save(argThat(
+                p ->
+                        p.getStatus() == Status.DISABLED
+                )
+        );
+    }
+
+    
 }
