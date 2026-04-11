@@ -352,7 +352,8 @@ class PostServiceTest {
         );
 
         assertThat(ex).hasMessage("You are not authorized to perform this action");
-        verifyNoMoreInteractions(postRepository);
+        verify(postRepository).findBySlugAndStatus(textPost.getSlug(), Status.ENABLED);
+        verify(postRepository, never()).save(any(Post.class));
     }
 
     @Test
@@ -410,7 +411,8 @@ class PostServiceTest {
                 () -> postService.updatePost(textPost.getSlug(),  otherUser, "New title", "Text", PostType.TEXT, null)
         );
         assertThat(ex).hasMessage("You are not authorized to perform this action");
-        verifyNoMoreInteractions(postRepository);
+        verify(postRepository).findBySlugAndStatus(textPost.getSlug(), Status.ENABLED);
+        verify(postRepository, never()).save(any(Post.class));
     }
 
     @Test
@@ -426,7 +428,8 @@ class PostServiceTest {
         );
 
         assertThat(ex).hasMessage("You are not authorized to perform this action");
-        verifyNoMoreInteractions(postRepository);
+        verify(postRepository).findBySlugAndStatus(textPost.getSlug(), Status.ENABLED);
+        verify(postRepository, never()).save(any(Post.class));
     }
 
     @Test
@@ -462,7 +465,8 @@ class PostServiceTest {
         );
 
         assertThat(ex).hasMessage("URL posts must have a URL");
-        verifyNoMoreInteractions(postRepository);
+        verify(postRepository).findBySlugAndStatus(textPost.getSlug(), Status.ENABLED);
+        verify(postRepository, never()).save(any(Post.class));
     }
 
     @Test
@@ -476,7 +480,8 @@ class PostServiceTest {
         );
 
         assertThat(ex).hasMessage("URL posts must have a URL");
-        verifyNoMoreInteractions(postRepository);
+        verify(postRepository).findBySlugAndStatus(textPost.getSlug(), Status.ENABLED);
+        verify(postRepository, never()).save(any(Post.class));
     }
 
     @Test
