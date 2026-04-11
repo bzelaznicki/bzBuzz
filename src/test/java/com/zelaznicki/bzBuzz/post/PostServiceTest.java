@@ -379,7 +379,7 @@ class PostServiceTest {
     }
 
     @Test
-    void shouldThrowException_whenUnauthorizedUserDeletesPost() {
+    void post_shouldThrowException_whenUnauthorizedUserDeletesPost() {
         when(postRepository.findBySlugAndStatus(textPost.getSlug(), Status.ENABLED))
                 .thenReturn(Optional.of(textPost));
         IllegalArgumentException ex = assertThrows(
@@ -393,7 +393,7 @@ class PostServiceTest {
     }
 
     @Test
-    void shouldDeletePost_whenPostIsFoundAndDeletedByOwner() {
+    void post_shouldDeletePost_whenPostIsFoundAndDeletedByOwner() {
         when(postRepository.findBySlugAndStatus(textPost.getSlug(), Status.ENABLED))
         .thenReturn(Optional.of(textPost));
         postService.deletePost(textPost.getSlug(), user);
