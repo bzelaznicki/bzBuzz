@@ -274,6 +274,17 @@ class PostServiceTest {
     }
 
     @Test
+    void post_shouldThrowException_whenPostTypeIsURLAndTheURLIsBlank() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.create(user, board, "New Post", null, PostType.URL, "      ")
+        );
+
+        assertThat(ex).hasMessage("URL posts must have a URL");
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
     void post_shouldThrowException_whenBothURLAndTextAreProvided() {
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
