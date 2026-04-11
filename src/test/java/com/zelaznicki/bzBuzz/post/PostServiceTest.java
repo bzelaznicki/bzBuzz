@@ -493,4 +493,26 @@ class PostServiceTest {
         assertThat(post).isEqualTo(textPost);
 
     }
+
+    @Test
+    void post_shouldThrowException_whenSlugIsOnADifferentBoard() {
+        Board otherBoard = Board.builder()
+                .id(UUID.randomUUID())
+                .name("other")
+                .memberCount(1)
+                .createdBy(user)
+                .isPrivate(false)
+                .build();
+
+        when(postRepository.findBySlugAndStatus(textPost.getSlug(), Status.ENABLED))
+        .thenReturn(Optional.of(textPost));
+
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
+                () -> postService.findByBoardAndSlug(otherBoard, textPost.getSlug())
+        );
+
+        assertThat(ex).hasMessage("Post not found");
+
+    }
 }
