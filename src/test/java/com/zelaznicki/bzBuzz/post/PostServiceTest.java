@@ -280,6 +280,9 @@ class PostServiceTest {
         verify(postRepository).save(argThat(p ->
                         p.getTitle().equals(postTitle) &&
                         p.getStatus() == Status.ENABLED &&
+                        p.getCreator().equals(user) &&
+                        p.getBoard().equals(board) &&
+                        p.getPostType() == PostType.TEXT &&
                         p.getVoteScore() == 0 &&
                         p.getUrl() == null &&
                         p.getText().equals(postBody)
@@ -296,6 +299,9 @@ class PostServiceTest {
         verify(postRepository).save(argThat(p ->
                         p.getTitle().equals(postTitle) &&
                         p.getStatus() == Status.ENABLED &&
+                        p.getCreator().equals(user) &&
+                        p.getBoard().equals(board) &&
+                        p.getPostType() == PostType.URL &&
                         p.getVoteScore() == 0 &&
                         p.getUrl().equals(postUrl) &&
                         p.getText() == null &&
