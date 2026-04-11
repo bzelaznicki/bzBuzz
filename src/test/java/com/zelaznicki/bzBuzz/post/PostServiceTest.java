@@ -34,6 +34,7 @@ class PostServiceTest {
     private User user;
     private User otherUser;
     private Post textPost;
+    private Post urlPost;
     private Board board;
 
     @BeforeEach
@@ -67,6 +68,19 @@ class PostServiceTest {
                 .board(board)
                 .text("Here's some text")
                 .postType(PostType.TEXT)
+                .build();
+
+
+        urlPost = Post.builder()
+                .id(UUID.randomUUID())
+                .voteScore(0)
+                .title("My Url Post")
+                .slug("my-url-post-1a2b3c")
+                .status(Status.ENABLED)
+                .creator(user)
+                .board(board)
+                .postType(PostType.URL)
+                .url("https://example.com")
                 .build();
 
     }
@@ -183,6 +197,17 @@ class PostServiceTest {
     }
 
     @Test
+    void post_shouldThrowException_whenTitleIsBlank() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.create(user,board, "       ", "Content", PostType.TEXT, null)
+        );
+
+        assertThat(ex).hasMessage("Title cannot be empty");
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
     void post_shouldThrowException_whenTitleIsOver255Characters() {
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
@@ -209,6 +234,17 @@ class PostServiceTest {
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> postService.create(user, board, "New Post", null, PostType.TEXT, null)
+        );
+
+        assertThat(ex).hasMessage("Text posts must have a body");
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
+    void post_shouldThrowException_whenPostTypeIsTextAndTheBodyIsBlank() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.create(user, board, "New Post", "          ", PostType.TEXT, null)
         );
 
         assertThat(ex).hasMessage("Text posts must have a body");
@@ -481,6 +517,21 @@ class PostServiceTest {
 
         assertThat(ex).hasMessage("URL posts must have a URL");
         verify(postRepository).findBySlugAndStatus(textPost.getSlug(), Status.ENABLED);
+        verify(postRepository, never()).save(any(Post.class));
+    }
+
+    @Test
+    void post_shouldThrowException_whenTextIsNullOnPostUpdateToText() {
+        when(postRepository.findBySlugAndStatus(urlPost.getSlug(), Status.ENABLED))
+        .thenReturn(Optional.of(urlPost));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> postService.updatePost(urlPost.getSlug(), user, null, null, PostType.TEXT, null)
+        );
+
+        assertThat(ex).hasMessage("Text posts must have a body");
+        verify(postRepository).findBySlugAndStatus(urlPost.getSlug(), Status.ENABLED);
         verify(postRepository, never()).save(any(Post.class));
     }
 
