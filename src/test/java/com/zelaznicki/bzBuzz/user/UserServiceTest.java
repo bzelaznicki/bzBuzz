@@ -1,5 +1,6 @@
 package com.zelaznicki.bzBuzz.user;
 
+import com.zelaznicki.bzBuzz.common.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -86,5 +87,45 @@ public class UserServiceTest {
             && !u.getPasswordHash().equals("strongPassWord1!")
                 && u.getEmail().equals(user.getEmail())
                 ));
+    }
+
+    @Test
+    void user_shouldThrowException_whenUserEmailDoesNotExist() {
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
+                () -> userService.findByEmail(user.getEmail())
+        );
+
+        assertThat(ex).hasMessage("User not found");
+    }
+
+    @Test
+    void user_shouldThrowException_whenUsernameDoesNotExist() {
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
+                () -> userService.findByUsername(user.getUsername())
+        );
+
+        assertThat(ex).hasMessage("User not found");
+    }
+
+    @Test
+    void user_shouldReturnUser_whenUserIsFoundByEmail() {
+        when(userRepository.findByEmail(user.getEmail()))
+        .thenReturn(Optional.of(user));
+
+        User foundUser = userService.findByEmail(user.getEmail());
+
+        assertThat(foundUser).isEqualTo(user);
+    }
+
+    @Test
+    void user_shouldReturnUser_whenUserIsFoundByUsername() {
+        when(userRepository.findByUsername(user.getUsername()))
+        .thenReturn(Optional.of(user));
+
+        User foundUser = userService.findByUsername(user.getUsername());
+        
+        assertThat(foundUser).isEqualTo(user);
     }
 }
