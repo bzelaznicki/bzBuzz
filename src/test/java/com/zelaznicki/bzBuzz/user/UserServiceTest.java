@@ -87,8 +87,11 @@ public class UserServiceTest {
         when(passwordEncoder.encode("strongPassWord1!"))
                 .thenReturn("$2a$10$hashedpassword");
 
+        when(userRepository.save(any(User.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        userService.register(user.getUsername(), user.getEmail(), "strongPassWord1!");
+
+        User created = userService.register(user.getUsername(), user.getEmail(), "strongPassWord1!");
 
         verify(passwordEncoder).encode("strongPassWord1!");
         verify(userRepository).save(argThat(
@@ -96,6 +99,9 @@ public class UserServiceTest {
             && u.getPasswordHash().equals("$2a$10$hashedpassword")
                 && u.getEmail().equals(user.getEmail())
                 ));
+        assertThat(created.getUsername()).isEqualTo(user.getUsername());
+        assertThat(created.getPasswordHash()).isEqualTo("$2a$10$hashedpassword");
+        assertThat(created.getEmail()).isEqualTo(user.getEmail());
     }
 
     @Test
