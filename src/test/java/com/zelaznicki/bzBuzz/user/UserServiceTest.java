@@ -97,6 +97,9 @@ public class UserServiceTest {
 
     @Test
     void user_shouldThrowException_whenUserEmailDoesNotExist() {
+        when(userRepository.findByEmail(user.getEmail()))
+                .thenReturn(Optional.empty());
+
         ResourceNotFoundException ex = assertThrows(
                 ResourceNotFoundException.class,
                 () -> userService.findByEmail(user.getEmail())
@@ -107,6 +110,9 @@ public class UserServiceTest {
 
     @Test
     void user_shouldThrowException_whenUsernameDoesNotExist() {
+        when(userRepository.findByUsername(user.getUsername()))
+                .thenReturn(Optional.empty());
+
         ResourceNotFoundException ex = assertThrows(
                 ResourceNotFoundException.class,
                 () -> userService.findByUsername(user.getUsername())
