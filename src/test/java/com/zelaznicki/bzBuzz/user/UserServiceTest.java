@@ -7,12 +7,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -28,8 +30,11 @@ public class UserServiceTest {
     @InjectMocks
     private UserService userService;
 
+    @Mock
+    private UserDetails userDetails;
 
     private User user;
+
 
     @BeforeEach
     void setUp() {
@@ -38,6 +43,7 @@ public class UserServiceTest {
                 .username("testUser")
                 .email("user@example.com")
                 .build();
+
     }
 
     @Test
@@ -125,7 +131,28 @@ public class UserServiceTest {
         .thenReturn(Optional.of(user));
 
         User foundUser = userService.findByUsername(user.getUsername());
-        
+
         assertThat(foundUser).isEqualTo(user);
+    }
+
+    @Test
+    void user_shouldReturnNull_whenUserDetailsIsNull() {
+        User foundUser = userService.findByUserDetails(null);
+
+        assertNull(foundUser);
+        verifyNoInteractions(userRepository);
+    }
+
+
+    @Test
+    void user_shouldReturnUser_whenUserDetailsIsValid() {
+        when(userDetails.getUsername())
+                .thenReturn(user.getEmail());
+
+        when(userRepository.findByEmail(user.getEmail()))
+                .thenReturn(Optional.of(user));
+
+        User result = userService.findByUserDetails(userDetails);
+        assertThat(result).isEqualTo(user);
     }
 }
