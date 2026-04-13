@@ -102,5 +102,13 @@ public class SearchServiceTest {
         );
     }
 
+    @Test
+    void search_shouldReturnEmptyPostPage_whenPageIsNegative() {
+        Page<Post> found = searchService.findPostsByTitle("java", -1);
+
+        assertThat(found).isEqualTo(Page.empty());
+        verifyNoInteractions(postRepository);
+    }
+
 
 }
