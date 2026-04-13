@@ -51,6 +51,14 @@ public class SearchServiceTest {
     }
 
     @Test
+    void search_shouldReturnEmptyBoardList_whenBoardQueryIsBlank() {
+        List<Board> found = searchService.searchBoards("       ");
+
+        assertThat(found).isEqualTo(Collections.emptyList());
+        verifyNoInteractions(boardRepository);
+    }
+
+    @Test
     void search_shouldReturnBoardResults_whenQueryIsValid() {
         Board board = Board.builder().id(UUID.randomUUID()).name("java").build();
         when(boardRepository.searchPublicBoards("java"))
@@ -72,6 +80,14 @@ public class SearchServiceTest {
     @Test
     void search_shouldReturnEmptyPostPage_whenPostQueryIsEmpty() {
         Page<Post> found = searchService.findPostsByTitle("", 0);
+
+        assertThat(found).isEqualTo(Page.empty());
+        verifyNoInteractions(postRepository);
+    }
+
+    @Test
+    void search_shouldReturnEmptyPostPage_whenPostQueryIsBlank() {
+        Page<Post> found = searchService.findPostsByTitle("             ", 0);
 
         assertThat(found).isEqualTo(Page.empty());
         verifyNoInteractions(postRepository);
