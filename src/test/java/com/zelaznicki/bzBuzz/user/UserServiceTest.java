@@ -88,9 +88,10 @@ public class UserServiceTest {
 
         userService.register(user.getUsername(), user.getEmail(), "strongPassWord1!");
 
+        verify(passwordEncoder).encode("strongPassWord1!");
         verify(userRepository).save(argThat(
                 u -> u.getUsername().equals(user.getUsername())
-            && !u.getPasswordHash().equals("strongPassWord1!")
+            && u.getPasswordHash().equals("$2a$10$hashedpassword")
                 && u.getEmail().equals(user.getEmail())
                 ));
     }
