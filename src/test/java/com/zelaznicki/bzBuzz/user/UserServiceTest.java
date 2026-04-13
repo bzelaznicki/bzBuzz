@@ -62,6 +62,8 @@ public class UserServiceTest {
 
     @Test
     void user_shouldThrowException_whenUsernameAlreadyExists() {
+        when(userRepository.existsByEmail("newuser@example.com"))
+            .thenReturn(false);
         when(userRepository.existsByUsername(user.getUsername()))
                 .thenReturn(true);
 
