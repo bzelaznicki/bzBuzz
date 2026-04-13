@@ -59,6 +59,19 @@ public class SearchServiceTest {
     }
 
     @Test
+    void search_shouldEscapeSpecialCharacters_whenBoardQueryContainsWildCards() {
+        String rawQuery = "Bobb\\y_T%ables_";
+        String escapedQuery = rawQuery
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
+
+        searchService.searchBoards(rawQuery);
+
+        verify(boardRepository).searchPublicBoards(escapedQuery);
+    }
+
+    @Test
     void search_shouldReturnBoardResults_whenQueryIsValid() {
         Board board = Board.builder().id(UUID.randomUUID()).name("java").build();
         when(boardRepository.searchPublicBoards("java"))
