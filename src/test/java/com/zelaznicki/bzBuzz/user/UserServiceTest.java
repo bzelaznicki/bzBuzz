@@ -57,7 +57,9 @@ public class UserServiceTest {
         );
 
         assertThat(ex).hasMessage("Email already in use");
+        verify(userRepository, never()).existsByUsername(anyString());
         verify(userRepository, never()).save(any(User.class));
+        verifyNoInteractions(passwordEncoder);
     }
 
     @Test
@@ -74,6 +76,7 @@ public class UserServiceTest {
 
         assertThat(ex).hasMessage("Username already taken");
         verify(userRepository, never()).save(any(User.class));
+        verifyNoInteractions(passwordEncoder);
     }
 
     @Test
