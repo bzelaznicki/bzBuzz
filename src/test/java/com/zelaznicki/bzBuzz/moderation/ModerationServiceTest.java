@@ -73,7 +73,7 @@ public class ModerationServiceTest {
     }
 
     @Test
-    void mod_shouldThrowException_whenUserIsNotAModerator() {
+    void mod_shouldThrowException_whenDeletingPostWhenUserIsNotAModerator() {
         when(boardMemberRepository.findByBoardAndUser(board,regularUser))
                 .thenReturn(Optional.empty());
 
