@@ -3,6 +3,7 @@ package com.zelaznicki.bzBuzz.moderation;
 import com.zelaznicki.bzBuzz.board.Board;
 import com.zelaznicki.bzBuzz.board.BoardMemberRepository;
 import com.zelaznicki.bzBuzz.board.MembershipRole;
+import com.zelaznicki.bzBuzz.common.Status;
 import com.zelaznicki.bzBuzz.post.Post;
 import com.zelaznicki.bzBuzz.post.PostRepository;
 import com.zelaznicki.bzBuzz.user.User;
@@ -20,5 +21,8 @@ public class ModerationService {
         boardMemberRepository.findByBoardAndUser(board, user)
                 .filter(m -> m.getRole() == MembershipRole.MODERATOR)
                 .orElseThrow(() -> new IllegalArgumentException("You are not a moderator of this board"));
+
+        post.setStatus(Status.REMOVED);
+        postRepository.save(post);
     }
 }

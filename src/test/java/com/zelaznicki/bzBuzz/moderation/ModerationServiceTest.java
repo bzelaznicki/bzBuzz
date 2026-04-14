@@ -1,7 +1,9 @@
 package com.zelaznicki.bzBuzz.moderation;
 
 import com.zelaznicki.bzBuzz.board.Board;
+import com.zelaznicki.bzBuzz.board.BoardMember;
 import com.zelaznicki.bzBuzz.board.BoardMemberRepository;
+import com.zelaznicki.bzBuzz.board.MembershipRole;
 import com.zelaznicki.bzBuzz.common.Status;
 import com.zelaznicki.bzBuzz.post.Post;
 import com.zelaznicki.bzBuzz.post.PostRepository;
@@ -81,5 +83,25 @@ public class ModerationServiceTest {
 
        assertThat(ex).hasMessage("You are not a moderator of this board");
        verify(postRepository, never()).save(any(Post.class));
+    }
+
+    @Test
+    void mod_shouldRemovePost_whenUserIsModerator() {
+        BoardMember moderatorMember = BoardMember.builder()
+                .id(UUID.randomUUID())
+                .user(moderator)
+                .board(board)
+                .role(MembershipRole.MODERATOR)
+                .build();
+
+        when(boardMemberRepository.findByBoardAndUser(board,moderator))
+            .thenReturn(Optional.of(moderatorMember));
+
+        moderationService.removePost(post, moderator, board);
+
+        verify(postRepository).save(argThat(
+                p ->
+                        p.getStatus().equals(Status.REMOVED)
+        ));
     }
 }
