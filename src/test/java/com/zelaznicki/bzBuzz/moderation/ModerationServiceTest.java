@@ -38,6 +38,7 @@ public class ModerationServiceTest {
     private User regularUser;
     private Board board;
     private Post post;
+    private BoardMember moderatorMember;
 
 
     @BeforeEach
@@ -72,6 +73,12 @@ public class ModerationServiceTest {
                 .voteScore(1)
                 .status(Status.ENABLED)
                 .build();
+        moderatorMember = BoardMember.builder()
+                .id(UUID.randomUUID())
+                .user(moderator)
+                .board(board)
+                .role(MembershipRole.MODERATOR)
+                .build();
     }
 
     @Test
@@ -87,12 +94,6 @@ public class ModerationServiceTest {
 
     @Test
     void mod_shouldRemovePost_whenUserIsModerator() {
-        BoardMember moderatorMember = BoardMember.builder()
-                .id(UUID.randomUUID())
-                .user(moderator)
-                .board(board)
-                .role(MembershipRole.MODERATOR)
-                .build();
 
         when(boardMemberRepository.findByBoardAndUser(board,moderator))
             .thenReturn(Optional.of(moderatorMember));
@@ -103,5 +104,20 @@ public class ModerationServiceTest {
                 p ->
                         p.getStatus().equals(Status.REMOVED)
         ));
+    }
+
+    @Test
+    void mod_shouldThrowException_whenPostIsAlreadyRemoved() {
+
+        post.setStatus(Status.REMOVED);
+        when(boardMemberRepository.findByBoardAndUser(board,moderator))
+                .thenReturn(Optional.of(moderatorMember));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> moderationService.removePost(post, moderator, board));
+
+        assertThat(ex).hasMessage("This post is already removed");
+
+        verify(postRepository, never()).save(any(Post.class));
+
     }
 }
